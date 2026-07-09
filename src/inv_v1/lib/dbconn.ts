@@ -135,13 +135,13 @@ export class DBProcessor {
 					} else {
 						if (query.queryParms && query.queryParms.length === 1) {
 							dbParm = query.queryParms[0];
-							[result] = await this.dbConnection.execute(query.queryCommand, dbParm);
+							[result] = await this.dbConnection.query(query.queryCommand, dbParm);
 						} else if (query.queryParms && query.queryParms.length > 1) {
 							// the .flat() function will convert the 2D array into 1D
 							// mysql query can only accept series of 1D array as parameters
-							[result] = await this.dbConnection.execute(query.queryCommand, query.queryParms.flat());
+							[result] = await this.dbConnection.query(query.queryCommand, query.queryParms.flat());
 						} else {
-							[result] = await this.dbConnection.execute(query.queryCommand);
+							[result] = await this.dbConnection.query(query.queryCommand);
 						}
 
 						const header = result as unknown as mysql.ResultSetHeader;
@@ -231,9 +231,12 @@ export class DBProcessor {
             };
 
 			if (continueProcess) {
+				console.log("Executing Query:", queryCommand);
 				// Execute the query using the established connection.
                 // Use destructuring `[rows]` to get the data table from the result tuple.
-                const [rows] = await this.dbConnection!.execute(queryCommand, params);
+                const [rows] = (params && params.length > 0)
+                  ? await this.dbConnection!.query(queryCommand, params)
+                  : await this.dbConnection!.query(queryCommand);
 
                 // `rows` will be a RowDataPacket[] for SELECT statements.
                 returnValue = rows as RowDataPacket[];
@@ -258,7 +261,9 @@ export class DBProcessor {
                 host: this.dbHost,
                 port: this.dbPort,
                 user: this.dbUser,
-                password: this.dbPassword
+                password: this.dbPassword,
+                multipleStatements: true,
+                disableEval: true
 			};
 			if (this.dbName) {
 				dbConfig.database = this.dbName;

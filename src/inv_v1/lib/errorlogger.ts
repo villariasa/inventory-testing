@@ -175,9 +175,14 @@ export class ErrorLogger {
      * }
      */
     public async logError(error: unknown, context: string): Promise<ErrorLogEntry> {
-        await this.checkRotation();
+        console.error(`❌ [ErrorLogger] Error in ${context}:`, error);
+        try {
+            await this.checkRotation();
+        } catch (e) {}
         const logEntry = this.createLogEntry(error, context, new Date());
-        await this.writeLogEntry(logEntry);
+        try {
+            await this.writeLogEntry(logEntry);
+        } catch (e) {}
         return logEntry;
     }
 
