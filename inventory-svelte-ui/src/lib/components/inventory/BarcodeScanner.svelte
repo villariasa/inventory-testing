@@ -25,7 +25,7 @@
   let filePreviewUrl = $state<string | null>(null);
 
   let cameraDevices = $state<any[]>([]);
-  let selectedCameraId = $state<string>('');
+  let selectedCameraId = $state<string>('environment');
 
   let autoZoomLevel = $state(1.0);
   let autoAdjustTimer: any = null;
@@ -105,8 +105,11 @@
       stopAutoAdjust();
       try {
         await html5Qrcode.stop();
+        const cameraConfig = (deviceId === 'environment' || deviceId === 'user')
+          ? { facingMode: deviceId }
+          : deviceId;
         await html5Qrcode.start(
-          deviceId,
+          cameraConfig,
           {
             fps: 20,
             videoConstraints: {
@@ -206,7 +209,9 @@
             return;
           }
 
-          const deviceIdOrConfig = selectedCameraId || { facingMode: "environment" };
+          const deviceIdOrConfig = (selectedCameraId === 'environment' || selectedCameraId === 'user')
+            ? { facingMode: selectedCameraId }
+            : (selectedCameraId || { facingMode: "environment" });
 
           await scannerInstance.start(
             deviceIdOrConfig,
@@ -505,7 +510,7 @@
         </div>
       </div>
       <!-- Camera Selection Dropdown -->
-      {#if activeTab === 'camera' && cameraDevices.length > 1}
+      {#if activeTab === 'camera'}
         <div class="flex flex-col gap-1.5 w-full text-left">
           <label for="scanner-camera-select" class="text-xs font-bold text-muted-foreground uppercase tracking-wider">Select Scanner Source</label>
           <select
@@ -514,8 +519,12 @@
             onchange={(e) => handleCameraChange(e.currentTarget.value)}
             class="w-full h-10 rounded-xl border border-border bg-background px-3 text-sm font-semibold focus:outline-none focus:ring-1 focus:ring-primary text-foreground"
           >
+            <option value="environment">Back Camera (Standard)</option>
+            <option value="user">Front Camera (Standard)</option>
             {#each cameraDevices as device}
-              <option value={device.id}>{device.label || `Camera ${cameraDevices.indexOf(device) + 1}`}</option>
+              {#if device.id !== 'environment' && device.id !== 'user'}
+                <option value={device.id}>{device.label || `Camera ${cameraDevices.indexOf(device) + 1}`}</option>
+              {/if}
             {/each}
           </select>
         </div>

@@ -141,6 +141,7 @@
   let viewFullImageOpen = $state(false);
   let videoEl = $state<HTMLVideoElement | null>(null);
   let mediaStream = $state<MediaStream | null>(null);
+  let cameraFacingMode = $state<'user' | 'environment'>('environment');
 
   // Fetch all autocomplete imports
   async function loadImports() {
@@ -413,7 +414,7 @@
     try {
       setTimeout(async () => {
         mediaStream = await navigator.mediaDevices.getUserMedia({
-          video: { width: 640, height: 480, facingMode: 'user' }
+          video: { width: 640, height: 480, facingMode: cameraFacingMode }
         });
         if (videoEl) {
           videoEl.srcObject = mediaStream;
@@ -424,6 +425,28 @@
       console.error('Failed to open camera:', err);
       toast.error('Could not access camera. Please check permissions.');
       cameraOpen = false;
+    }
+  }
+
+  async function toggleCameraFacingMode() {
+    cameraFacingMode = cameraFacingMode === 'user' ? 'environment' : 'user';
+    if (mediaStream) {
+      mediaStream.getTracks().forEach(track => track.stop());
+      mediaStream = null;
+      try {
+        mediaStream = await navigator.mediaDevices.getUserMedia({
+          video: { width: 640, height: 480, facingMode: cameraFacingMode }
+        });
+        if (videoEl) {
+          videoEl.srcObject = mediaStream;
+          videoEl.play();
+        }
+        toast.success(`Switched to ${cameraFacingMode === 'user' ? 'front' : 'back'} camera.`);
+      } catch (err) {
+        console.error('Failed to switch camera facing mode:', err);
+        toast.error('Could not switch camera. Check if device supports it.');
+        cameraFacingMode = cameraFacingMode === 'user' ? 'environment' : 'user';
+      }
     }
   }
 
@@ -1006,12 +1029,18 @@
                 </div>
               {/if}
             </div>
-            <div class="flex gap-2 w-full justify-end pt-2">
-              <Button type="button" variant="outline" onclick={stopCamera} class="camera-cancel-btn">Cancel</Button>
-              <Button type="button" class="bg-primary hover:bg-primary/95 text-white flex items-center gap-1.5 camera-capture-btn" onclick={capturePhoto} disabled={!mediaStream}>
-                <Icon icon="mdi:camera-iris" width="16" />
-                Capture
+            <div class="flex gap-2 w-full justify-between pt-2">
+              <Button type="button" variant="outline" class="flex items-center gap-1.5 border-teal-200 text-teal-600 hover:text-teal-700 hover:bg-teal-50" onclick={toggleCameraFacingMode} disabled={!mediaStream}>
+                <Icon icon="mdi:camera-switch" width="16" />
+                Switch Camera
               </Button>
+              <div class="flex gap-2">
+                <Button type="button" variant="outline" onclick={stopCamera} class="camera-cancel-btn">Cancel</Button>
+                <Button type="button" class="bg-primary hover:bg-primary/95 text-white flex items-center gap-1.5 camera-capture-btn" onclick={capturePhoto} disabled={!mediaStream}>
+                  <Icon icon="mdi:camera-iris" width="16" />
+                  Capture
+                </Button>
+              </div>
             </div>
           </div>
         </div>
