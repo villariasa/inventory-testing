@@ -108,14 +108,23 @@
         const cameraConfig = (deviceId === 'environment' || deviceId === 'user')
           ? { facingMode: deviceId }
           : deviceId;
+
+        const videoConstraints: any = {
+          width: { min: 640, ideal: 1920, max: 3840 },
+          height: { min: 480, ideal: 1080, max: 2160 }
+        };
+
+        if (deviceId === 'environment' || deviceId === 'user') {
+          videoConstraints.facingMode = { ideal: deviceId };
+        } else {
+          videoConstraints.deviceId = { exact: deviceId };
+        }
+
         await html5Qrcode.start(
           cameraConfig,
           {
             fps: 20,
-            videoConstraints: {
-              width: { min: 640, ideal: 1920, max: 3840 },
-              height: { min: 480, ideal: 1080, max: 2160 }
-            },
+            videoConstraints: videoConstraints,
             experimentalFeatures: {
               useBarCodeDetectorIfSupported: true
             }
@@ -213,14 +222,24 @@
             ? { facingMode: selectedCameraId }
             : (selectedCameraId || { facingMode: "environment" });
 
+          const videoConstraints: any = {
+            width: { min: 640, ideal: 1920, max: 3840 },
+            height: { min: 480, ideal: 1080, max: 2160 }
+          };
+
+          if (selectedCameraId === 'environment' || selectedCameraId === 'user') {
+            videoConstraints.facingMode = { ideal: selectedCameraId };
+          } else if (selectedCameraId) {
+            videoConstraints.deviceId = { exact: selectedCameraId };
+          } else {
+            videoConstraints.facingMode = { ideal: "environment" };
+          }
+
           await scannerInstance.start(
             deviceIdOrConfig,
             {
               fps: 20,
-              videoConstraints: {
-                width: { min: 640, ideal: 1920, max: 3840 },
-                height: { min: 480, ideal: 1080, max: 2160 }
-              },
+              videoConstraints: videoConstraints,
               experimentalFeatures: {
                 useBarCodeDetectorIfSupported: true
               }

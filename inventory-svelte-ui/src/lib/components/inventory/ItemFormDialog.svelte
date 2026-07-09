@@ -414,7 +414,7 @@
     try {
       setTimeout(async () => {
         mediaStream = await navigator.mediaDevices.getUserMedia({
-          video: { width: 640, height: 480, facingMode: cameraFacingMode }
+          video: { width: 640, height: 480, facingMode: { ideal: cameraFacingMode } }
         });
         if (videoEl) {
           videoEl.srcObject = mediaStream;
@@ -435,7 +435,7 @@
       mediaStream = null;
       try {
         mediaStream = await navigator.mediaDevices.getUserMedia({
-          video: { width: 640, height: 480, facingMode: cameraFacingMode }
+          video: { width: 640, height: 480, facingMode: { ideal: cameraFacingMode } }
         });
         if (videoEl) {
           videoEl.srcObject = mediaStream;
