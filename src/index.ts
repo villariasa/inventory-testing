@@ -44,20 +44,23 @@ app.get('/swagger', swaggerUI({ url: '/doc' }));
 
 const port = parseInt(process.env.BACKEND_PORT || '3000');
 
-const server = serve({ fetch: app.fetch, port }, () => {
-  console.log(`Inventory API running on port ${port}`);
-  console.log(`Swagger UI: http://<host>:${port}/swagger`);
-});
-
-function gracefulShutdown(signal: string): void {
-  console.log(`\nReceived ${signal}, shutting down...`);
-  server.close(() => {
-    console.log('Server closed.');
-    process.exit(0);
+if (typeof process !== 'undefined' && process.versions && process.versions.node && typeof globalThis.caches === 'undefined') {
+  const server = serve({ fetch: app.fetch, port }, () => {
+    console.log(`Inventory API running on port ${port}`);
+    console.log(`Swagger UI: http://<host>:${port}/swagger`);
   });
+
+  const gracefulShutdown = (signal: string): void => {
+    console.log(`\nReceived ${signal}, shutting down...`);
+    server.close(() => {
+      console.log('Server closed.');
+      process.exit(0);
+    });
+  };
+
+  process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+  process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
 }
 
-process.on('SIGINT', () => gracefulShutdown('SIGINT'));
-process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
 
 export default app;

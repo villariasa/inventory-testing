@@ -1,0 +1,11 @@
+name = "inventory-backend"
+main = "src/index.ts"
+compatibility_date = "2025-01-01"
+compatibility_flags = [ "nodejs_compat" ]
+
+[vars]
+DB_HOST = "inventory-db.c5202ycmec1k.ap-southeast-1.rds.amazonaws.com"
+DB_PORT = "3306"
+DB_USER = "developer"
+DB_NAME = "inventory"
+BACKEND_PORT = "3000"
