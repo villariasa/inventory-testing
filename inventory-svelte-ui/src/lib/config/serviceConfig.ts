@@ -11,12 +11,12 @@ const host = isBrowser ? window.location.hostname : 'localhost';
 
 const BASE_URLS = {
   local: `http://${host}:3000`,          // inventory backend port
-  live:  env.PUBLIC_INV_API_URL || 'https://inventory-backend.medyvillarias36.workers.dev'
+  live:  env.PUBLIC_INV_API_URL || 'https://inventory-backend.medzvillariaz.workers.dev'
 };
 
 const AUTH_BASE_URLS = {
   local: `http://${host}:3000`,          // membership backend port (for auth)
-  live:  env.PUBLIC_AUTH_API_URL || 'https://inventory-backend.medyvillarias36.workers.dev'
+  live:  env.PUBLIC_AUTH_API_URL || 'https://inventory-backend.medzvillariaz.workers.dev'
 };
 
 export const BASE_URL = BASE_URLS[ENV];

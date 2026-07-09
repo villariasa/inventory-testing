@@ -8,5 +8,5 @@ BACKEND_PORT = "3000"
 
 [[hyperdrive]]
 binding = "HYPERDRIVE"
-id = "80a0ac7ff75441e9982b16cb4216a8df"
+id = "c0345eaf46874dcb8cdf5e5b971ae4a5"
 
