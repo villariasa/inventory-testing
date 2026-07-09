@@ -44,7 +44,7 @@ app.get('/swagger', swaggerUI({ url: '/doc' }));
 
 const port = parseInt(process.env.BACKEND_PORT || '3000');
 
-if (typeof process !== 'undefined' && process.versions && process.versions.node && typeof globalThis.caches === 'undefined') {
+if (typeof process !== 'undefined' && process.versions && process.versions.node && typeof (globalThis as any).caches === 'undefined') {
   const server = serve({ fetch: app.fetch, port }, () => {
     console.log(`Inventory API running on port ${port}`);
     console.log(`Swagger UI: http://<host>:${port}/swagger`);
