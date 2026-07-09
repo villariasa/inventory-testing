@@ -1,0 +1,7 @@
+{
+  "endpoints": [
+    { "path": "/inv/v1/get-inventory-unit-item", "method": "post", "tags": ["Unit Item"], "summary": "Get inventory unit item(s)", "storedProcedure": "udf_and_views_inventory.getInventoryUnitItem", "requestExample": { "bol_getone": 0, "unit_id": 1, "item_category_id": 1, "unit_item_id": 0, "item_description": "" }, "responseExample": { "success": true, "http_code": 200, "message": "Inventory unit items retrieved successfully", "data": { "success": true, "message": "ok", "json_data": {} } } },
+    { "path": "/inv/v1/get-unit-item-info-by-bin", "method": "post", "tags": ["Unit Item"], "summary": "Get unit item info by bin", "storedProcedure": "udf_and_views_inventory.getUnitItemInfoByBin", "requestExample": { "bin_id": 1 }, "responseExample": { "success": true, "http_code": 200, "message": "Unit item info retrieved successfully", "data": { "success": true, "message": "ok", "json_data": {} } } },
+    { "path": "/inv/v1/post-unit-item-bin-switch", "method": "post", "tags": ["Unit Item"], "summary": "Switch unit item bin assignments", "storedProcedure": "udf_and_views_inventory.postUnitItemBinSwitch", "requestExample": { "user_id": 1, "swapped_items": [{ "unit_item_id": 1, "from_bin_id": 1, "to_bin_id": 2 }] }, "responseExample": { "success": true, "http_code": 200, "message": "Unit item bin switch processed successfully", "data": { "success": true, "message": "ok", "json_data": {} } } }
+  ]
+}

@@ -1,0 +1,40 @@
+{
+  "endpoints": [
+    {
+      "path": "/inv/v1/get-item-import-list",
+      "method": "post",
+      "tags": ["Item Imports"],
+      "summary": "Get item import list",
+      "storedProcedure": "udf_and_views_inventory.getItemImportList",
+      "requestExample": {},
+      "responseExample": { "success": true, "http_code": 200, "message": "Item import list retrieved successfully", "data": { "success": true, "message": "ok", "json_data": {} } }
+    },
+    {
+      "path": "/inv/v1/get-item-imports",
+      "method": "post",
+      "tags": ["Item Imports"],
+      "summary": "Get item imports",
+      "storedProcedure": "udf_and_views_inventory.getItemImports",
+      "requestExample": { "import_type": "brand", "bol_getone": 0, "id": 0, "description": "" },
+      "responseExample": { "success": true, "http_code": 200, "message": "Item imports retrieved successfully", "data": { "success": true, "message": "ok", "json_data": {} } }
+    },
+    {
+      "path": "/inv/v1/get-import-items",
+      "method": "post",
+      "tags": ["Item Imports"],
+      "summary": "Get import items",
+      "storedProcedure": "udf_and_views_inventory.getImportItems",
+      "requestExample": { "unit_id": 1, "item_description": "" },
+      "responseExample": { "success": true, "http_code": 200, "message": "Import items retrieved successfully", "data": { "success": true, "message": "ok", "json_data": {} } }
+    },
+    {
+      "path": "/inv/v1/post-item-imports",
+      "method": "post",
+      "tags": ["Item Imports"],
+      "summary": "Save / update / delete item imports",
+      "storedProcedure": "udf_and_views_inventory.postItemImports",
+      "requestExample": { "process_type": 0, "import_type": "brand", "description": "Sample", "user_id": 1, "id": 0 },
+      "responseExample": { "success": true, "http_code": 200, "message": "Item imports processed successfully", "data": { "success": true, "message": "ok", "json_data": {} } }
+    }
+  ]
+}

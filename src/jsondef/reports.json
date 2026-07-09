@@ -1,0 +1,121 @@
+{
+  "endpoints": [
+    {
+      "path": "/inv/v1/get-purchases-report",
+      "method": "post",
+      "tags": ["Reports"],
+      "summary": "Get purchases report",
+      "storedProcedure": "udf_and_views_inventory.getPurchasesReport",
+      "requestExample": { "start_date": "2024-01-01", "end_date": "2024-12-31", "client_id": "0", "withCost": false },
+      "responseExample": { "success": true, "http_code": 200, "message": "Purchases report retrieved successfully", "data": { "success": true, "message": "ok", "json_data": {} } }
+    },
+    {
+      "path": "/inv/v1/get-client-name",
+      "method": "post",
+      "tags": ["Reports"],
+      "summary": "Get client name(s)",
+      "storedProcedure": "udf_and_views_inventory.getClientName",
+      "requestExample": { "entity_id": 0 },
+      "responseExample": { "success": true, "http_code": 200, "message": "Client name(s) retrieved successfully", "data": { "success": true, "message": "ok", "json_data": {} } }
+    },
+    {
+      "path": "/inv/v1/get-internal-stocks-movements-report",
+      "method": "post",
+      "tags": ["Reports"],
+      "summary": "Get internal stocks movements report",
+      "storedProcedure": "udf_and_views_inventory.getInternalStocksMovementsReport",
+      "requestExample": { "start_date": "2024-01-01", "end_date": "2024-12-31", "units": ["0"] },
+      "responseExample": { "success": true, "http_code": 200, "message": "Internal stocks movements report retrieved successfully", "data": { "success": true, "message": "ok", "json_data": {} } }
+    },
+    {
+      "path": "/inv/v1/get-deliveries-report",
+      "method": "post",
+      "tags": ["Reports"],
+      "summary": "Get deliveries report",
+      "storedProcedure": "udf_and_views_inventory.getDeliveriesReport",
+      "requestExample": { "dateFrom": "2024-01-01", "dateTo": "2024-12-31", "units": ["0"], "withCost": false },
+      "responseExample": { "success": true, "http_code": 200, "message": "Deliveries report retrieved successfully", "data": { "success": true, "message": "ok", "json_data": {} } }
+    },
+    {
+      "path": "/inv/v1/get-sales-receivables-collections",
+      "method": "post",
+      "tags": ["Reports"],
+      "summary": "Get sales receivables collections",
+      "storedProcedure": "udf_and_views_inventory.getSalesReceivablesCollectionsJSON",
+      "requestExample": { "start_date": "2024-01-01", "end_date": "2024-12-31", "units": ["0"] },
+      "responseExample": { "success": true, "http_code": 200, "message": "Sales receivables collections retrieved successfully", "data": { "success": true, "message": "ok", "json_data": {} } }
+    },
+    {
+      "path": "/inv/v1/get-sales-report",
+      "method": "post",
+      "tags": ["Reports"],
+      "summary": "Get sales report",
+      "storedProcedure": "udf_and_views_inventory.getSalesReport",
+      "requestExample": { "start_date": "2024-01-01", "end_date": "2024-12-31", "charUnitList": ["0"] },
+      "responseExample": { "success": true, "http_code": 200, "message": "Sales report retrieved successfully", "data": { "success": true, "message": "ok", "json_data": {} } }
+    },
+    {
+      "path": "/inv/v1/get-client-ledger",
+      "method": "post",
+      "tags": ["Reports"],
+      "summary": "Get client ledger",
+      "storedProcedure": "udf_and_views_inventory.getClientLedger",
+      "requestExample": { "start_date": "2024-01-01", "end_date": "2024-12-31", "client_id": 0 },
+      "responseExample": { "success": true, "http_code": 200, "message": "Client ledger retrieved successfully", "data": { "success": true, "message": "ok", "json_data": {} } }
+    },
+    {
+      "path": "/inv/v1/get-expiries-and-past-due",
+      "method": "post",
+      "tags": ["Reports"],
+      "summary": "Get expiries and past due",
+      "storedProcedure": "udf_and_views_inventory.getExpiriesAndPastDue",
+      "requestExample": { "units": ["1"] },
+      "responseExample": { "success": true, "http_code": 200, "message": "Expiries and past due retrieved successfully", "data": { "success": true, "message": "ok", "json_data": {} } }
+    },
+    {
+      "path": "/inv/v1/get-stock-card",
+      "method": "post",
+      "tags": ["Reports"],
+      "summary": "Get stock card",
+      "storedProcedure": "udf_and_views_inventory.getJSONStockCard",
+      "requestExample": { "unit_id": 1, "start_date": "2024-01-01", "end_date": "2024-12-31" },
+      "responseExample": { "success": true, "http_code": 200, "message": "Stock card retrieved successfully", "data": { "success": true, "message": "ok", "json_data": {} } }
+    },
+    {
+      "path": "/inv/v1/get-inventory-list",
+      "method": "post",
+      "tags": ["Reports"],
+      "summary": "Get inventory list",
+      "storedProcedure": "udf_and_views_inventory.getInventoryList",
+      "requestExample": { "units": ["0"], "withCost": false },
+      "responseExample": { "success": true, "http_code": 200, "message": "Inventory list retrieved successfully", "data": { "success": true, "message": "ok", "json_data": {} } }
+    },
+    {
+      "path": "/inv/v1/get-payables-and-transactions-with-suppliers",
+      "method": "post",
+      "tags": ["Reports"],
+      "summary": "Get payables and transactions with suppliers",
+      "storedProcedure": "udf_and_views_inventory.getJSONPayablesAndTransactionsWithSuppliers",
+      "requestExample": { "supplier_id": 0, "start_date": "2024-01-01", "end_date": "2024-12-31", "onterm": false },
+      "responseExample": { "success": true, "http_code": 200, "message": "Payables and transactions with suppliers retrieved successfully", "data": { "success": true, "message": "ok", "json_data": {} } }
+    },
+    {
+      "path": "/inv/v1/get-payables-to-suppliers",
+      "method": "post",
+      "tags": ["Reports"],
+      "summary": "Get payables to suppliers",
+      "storedProcedure": "udf_and_views_inventory.getPayablesToSuppliersJSON",
+      "requestExample": { "date": "2024-12-31" },
+      "responseExample": { "success": true, "http_code": 200, "message": "Payables to suppliers retrieved successfully", "data": { "success": true, "message": "ok", "json_data": {} } }
+    },
+    {
+      "path": "/inv/v1/get-customer-inactivity",
+      "method": "post",
+      "tags": ["Reports"],
+      "summary": "Get customer inactivity",
+      "storedProcedure": "udf_and_views_inventory.getCustomerInactivity",
+      "requestExample": { "start_date": "2024-01-01", "end_date": "2024-12-31", "charUnitList": ["0"] },
+      "responseExample": { "success": true, "http_code": 200, "message": "Customer inactivity retrieved successfully", "data": { "success": true, "message": "ok", "json_data": {} } }
+    }
+  ]
+}

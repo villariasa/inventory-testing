@@ -1,0 +1,22 @@
+{
+  "endpoints": [
+    {
+      "path": "/inv/v1/get-employee-name",
+      "method": "post",
+      "tags": ["Cross/Misc"],
+      "summary": "Get employee name(s)",
+      "storedProcedure": "udf_and_views_inventory.getEmployeeName",
+      "requestExample": { "bol_getone": 0, "employee_id": 0, "employee_name": "" },
+      "responseExample": { "success": true, "http_code": 200, "message": "Employee name(s) retrieved successfully", "data": { "success": true, "message": "ok", "json_data": {} } }
+    },
+    {
+      "path": "/inv/v1/get-notification",
+      "method": "post",
+      "tags": ["Cross/Misc"],
+      "summary": "Get notifications",
+      "storedProcedure": "udf_and_views_inventory.getNotification",
+      "requestExample": {},
+      "responseExample": { "success": true, "http_code": 200, "message": "Notifications retrieved successfully", "data": { "success": true, "message": "ok", "json_data": {} } }
+    }
+  ]
+}

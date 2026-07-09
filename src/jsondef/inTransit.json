@@ -1,0 +1,40 @@
+{
+  "endpoints": [
+    {
+      "path": "/inv/v1/get-instransit-report",
+      "method": "post",
+      "tags": ["In-Transit"],
+      "summary": "Get in-transit report",
+      "storedProcedure": "udf_and_views_inventory.getInstransitReport",
+      "requestExample": { "search": "" },
+      "responseExample": { "success": true, "http_code": 200, "message": "In-transit report retrieved successfully", "data": { "success": true, "message": "ok", "json_data": {} } }
+    },
+    {
+      "path": "/inv/v1/get-in-transit-report",
+      "method": "post",
+      "tags": ["In-Transit"],
+      "summary": "Get in-transit report (no input)",
+      "storedProcedure": "udf_and_views_inventory.getInTransitReport",
+      "requestExample": {},
+      "responseExample": { "success": true, "http_code": 200, "message": "In-transit report retrieved successfully", "data": { "success": true, "message": "ok", "json_data": {} } }
+    },
+    {
+      "path": "/inv/v1/get-in-transit-items-invoices",
+      "method": "post",
+      "tags": ["In-Transit"],
+      "summary": "Get in-transit items invoices",
+      "storedProcedure": "udf_and_views_inventory.getInTransitItemsInvoices",
+      "requestExample": { "bol_getone": 0, "invoice_id": 0, "user_id": 1, "invoice_reference": "" },
+      "responseExample": { "success": true, "http_code": 200, "message": "In-transit items invoices retrieved successfully", "data": { "success": true, "message": "ok", "json_data": {} } }
+    },
+    {
+      "path": "/inv/v1/post-confirm-in-transit-items",
+      "method": "post",
+      "tags": ["In-Transit"],
+      "summary": "Confirm in-transit items",
+      "storedProcedure": "udf_and_views_inventory.postConfirmInTransitItems",
+      "requestExample": { "user_id": 1, "invoice_id": 1, "in_transit_items": [{ "in_transit_id": 1, "quanttiy_confirmed": 1 }] },
+      "responseExample": { "success": true, "http_code": 200, "message": "In-transit items confirmed successfully", "data": { "success": true, "message": "ok", "json_data": {} } }
+    }
+  ]
+}

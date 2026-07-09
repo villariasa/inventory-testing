@@ -1,0 +1,22 @@
+{
+  "endpoints": [
+    {
+      "path": "/inv/v1/get-inventory-item-category",
+      "method": "post",
+      "tags": ["Item Category"],
+      "summary": "Get inventory item category(ies)",
+      "storedProcedure": "udf_and_views_inventory.getInventoryItemCategory",
+      "requestExample": { "bol_getone": 0, "item_category_id": 0, "description": "" },
+      "responseExample": { "success": true, "http_code": 200, "message": "Inventory item categories retrieved successfully", "data": { "success": true, "message": "ok", "json_data": {} } }
+    },
+    {
+      "path": "/inv/v1/post-inventory-item-category",
+      "method": "post",
+      "tags": ["Item Category"],
+      "summary": "Save / update / delete inventory item category",
+      "storedProcedure": "udf_and_views_inventory.postInventoryItemCategory",
+      "requestExample": { "process_type": 0, "description": "Office Supplies", "glsl_id": 1, "user_id": 1, "item_category_id": 0 },
+      "responseExample": { "success": true, "http_code": 200, "message": "Inventory item category processed successfully", "data": { "success": true, "message": "ok", "json_data": {} } }
+    }
+  ]
+}

@@ -1,0 +1,49 @@
+{
+  "endpoints": [
+    {
+      "path": "/inv/v1/get-item-for-adjustment",
+      "method": "post",
+      "tags": ["Adjustment"],
+      "summary": "Get item(s) eligible for adjustment",
+      "storedProcedure": "udf_and_views_inventory.getItemForAdjustment",
+      "requestExample": { "template_id": 1, "source_unit_id": 1, "destination_unit_id": 1, "item_description": "" },
+      "responseExample": { "success": true, "http_code": 200, "message": "Items for adjustment retrieved successfully", "data": { "success": true, "message": "ok", "json_data": {} } }
+    },
+    {
+      "path": "/inv/v1/get-inventory-item-adjustment",
+      "method": "post",
+      "tags": ["Adjustment"],
+      "summary": "Get inventory item adjustment(s)",
+      "storedProcedure": "udf_and_views_inventory.getInventoryItemAdjustment",
+      "requestExample": { "bol_getone": 0, "adjustment_id": 0, "date_from": "", "date_to": "" },
+      "responseExample": { "success": true, "http_code": 200, "message": "Inventory item adjustments retrieved successfully", "data": { "success": true, "message": "ok", "json_data": {} } }
+    },
+    {
+      "path": "/inv/v1/get-inventory-item-adjustment-template",
+      "method": "post",
+      "tags": ["Adjustment"],
+      "summary": "Get inventory item adjustment template(s)",
+      "storedProcedure": "udf_and_views_inventory.getInventoryItemAdjustmentTemplate",
+      "requestExample": { "bol_getone": 0, "template_id": 0, "description": "" },
+      "responseExample": { "success": true, "http_code": 200, "message": "Adjustment templates retrieved successfully", "data": { "success": true, "message": "ok", "json_data": {} } }
+    },
+    {
+      "path": "/inv/v1/post-inventory-item-adjustment",
+      "method": "post",
+      "tags": ["Adjustment"],
+      "summary": "Apply an inventory item adjustment",
+      "storedProcedure": "udf_and_views_inventory.postInventoryItemAdjustment",
+      "requestExample": { "template_id": 1, "source_unit_id": 1, "destination_unit_id": 1, "item_id": 1, "quantity": 120.00, "unit_cost": 100.00, "remarks": "Remarks here", "user_id": 1 },
+      "responseExample": { "success": true, "http_code": 200, "message": "Inventory item adjustment processed successfully", "data": { "success": true, "message": "ok", "json_data": {} } }
+    },
+    {
+      "path": "/inv/v1/post-inventory-item-adjustment-template",
+      "method": "post",
+      "tags": ["Adjustment"],
+      "summary": "Save / update / delete inventory item adjustment template",
+      "storedProcedure": "udf_and_views_inventory.postInventoryItemAdjustmentTemplate",
+      "requestExample": { "process_type": 0, "description": "Stock Transfer", "require_destination_and_source": 1, "add_to_quantity": 1, "user_id": 1, "template_id": 0 },
+      "responseExample": { "success": true, "http_code": 200, "message": "Adjustment template processed successfully", "data": { "success": true, "message": "ok", "json_data": {} } }
+    }
+  ]
+}

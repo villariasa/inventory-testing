@@ -1,0 +1,7 @@
+{
+  "endpoints": [
+    { "path": "/inv/v1/get-inventory-unit-bin", "method": "post", "tags": ["Unit Bin"], "summary": "Get inventory unit bin(s)", "storedProcedure": "udf_and_views_inventory.getInventoryUnitBin", "requestExample": { "bol_getone": 0, "bin_id": 0, "unit_id": 1, "description": "" }, "responseExample": { "success": true, "http_code": 200, "message": "Inventory unit bins retrieved successfully", "data": { "success": true, "message": "ok", "json_data": {} } } },
+    { "path": "/inv/v1/get-unit-bin-except-one", "method": "post", "tags": ["Unit Bin"], "summary": "Get unit bins excluding one bin", "storedProcedure": "udf_and_views_inventory.getUnitBinExceptOne", "requestExample": { "unit_id": 1, "description": "", "bin_id": 1 }, "responseExample": { "success": true, "http_code": 200, "message": "Unit bins (except one) retrieved successfully", "data": { "success": true, "message": "ok", "json_data": {} } } },
+    { "path": "/inv/v1/post-inventory-unit-bin", "method": "post", "tags": ["Unit Bin"], "summary": "Save / update / delete inventory unit bin", "storedProcedure": "udf_and_views_inventory.postInventoryUnitBin", "requestExample": { "process_type": 0, "unit_id": 1, "description": "Bin A", "user_id": 1 }, "responseExample": { "success": true, "http_code": 200, "message": "Inventory unit bin processed successfully", "data": { "success": true, "message": "ok", "json_data": {} } } }
+  ]
+}

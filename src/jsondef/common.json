@@ -1,0 +1,49 @@
+{
+  "endpoints": [
+    {
+      "path": "/inv/v1/get-unit-name",
+      "method": "post",
+      "tags": ["Common & Dropdowns"],
+      "summary": "Get unit name(s) for dropdown",
+      "storedProcedure": "udf_and_views_inventory.getUnitName",
+      "requestExample": { "unit_id": 1 },
+      "responseExample": { "success": true, "http_code": 200, "message": "Unit name retrieved successfully", "data": { "success": true, "message": "ok", "json_data": {} } }
+    },
+    {
+      "path": "/inv/v1/get-user-unit",
+      "method": "post",
+      "tags": ["Common & Dropdowns"],
+      "summary": "Get unit assignments for a user",
+      "storedProcedure": "udf_and_views_inventory.getUserUnit",
+      "requestExample": { "user_id": 1, "exclude_head_office": 0 },
+      "responseExample": { "success": true, "http_code": 200, "message": "User unit retrieved successfully", "data": { "success": true, "message": "ok", "json_data": {} } }
+    },
+    {
+      "path": "/inv/v1/get-user-unit-array",
+      "method": "post",
+      "tags": ["Common & Dropdowns"],
+      "summary": "Get array of unit assignments for a user",
+      "storedProcedure": "udf_and_views_inventory.getUserUnitArray",
+      "requestExample": { "user_id": 1 },
+      "responseExample": { "success": true, "http_code": 200, "message": "User unit array retrieved successfully", "data": { "success": true, "message": "ok", "json_data": {} } }
+    },
+    {
+      "path": "/inv/v1/get-user-designated-unit",
+      "method": "post",
+      "tags": ["Common & Dropdowns"],
+      "summary": "Get designated unit(s) for a user",
+      "storedProcedure": "udf_and_views_inventory.getUserDesignatedUnit",
+      "requestExample": { "user_id": 1 },
+      "responseExample": { "success": true, "http_code": 200, "message": "User designated unit retrieved successfully", "data": { "success": true, "message": "ok", "json_data": {} } }
+    },
+    {
+      "path": "/inv/v1/get-adjustment-user-unit",
+      "method": "post",
+      "tags": ["Common & Dropdowns"],
+      "summary": "Get adjustment unit assignments for a user",
+      "storedProcedure": "udf_and_views_inventory.getAdjustmentUserUnit",
+      "requestExample": { "user_id": 1 },
+      "responseExample": { "success": true, "http_code": 200, "message": "Adjustment user unit retrieved successfully", "data": { "success": true, "message": "ok", "json_data": {} } }
+    }
+  ]
+}
