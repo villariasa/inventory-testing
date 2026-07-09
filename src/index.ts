@@ -14,10 +14,25 @@ import { itemImportsRoute } from './inv_v1/routes/itemImports.route.js';
 import { inTransitRoute } from './inv_v1/routes/inTransit.route.js';
 import { reportsRoute } from './inv_v1/routes/reports.route.js';
 import { crossMiscRoute } from './inv_v1/routes/crossMisc.route.js';
+import { DatabaseFactory } from './inv_v1/lib/database-factory.js';
 
 const app = new OpenAPIHono();
 
 app.use('*', cors());
+
+app.use('*', async (c, next) => {
+  if (c.env && (c.env as any).HYPERDRIVE) {
+    const hd = (c.env as any).HYPERDRIVE;
+    process.env.DB_HOST = hd.host;
+    process.env.DB_PORT = String(hd.port);
+    process.env.DB_USER = hd.user;
+    process.env.DB_PASSWORD = hd.password;
+    process.env.DB_NAME = hd.database;
+    DatabaseFactory.getInstance().reloadConfiguration();
+  }
+  await next();
+});
+
 
 
 app.route('/inv/v1', commonRoute);
