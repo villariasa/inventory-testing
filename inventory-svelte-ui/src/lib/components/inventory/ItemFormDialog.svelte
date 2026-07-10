@@ -1002,47 +1002,86 @@
     <!-- Camera Dialog Overlay -->
     {#if cameraOpen}
       <div 
-        class="fixed inset-0 z-[100] flex items-center justify-center bg-black/75 backdrop-blur-sm p-4 animate-in fade-in camera-backdrop rounded-2xl"
+        class="fixed inset-0 z-[200] flex flex-col bg-black animate-in fade-in"
         onpointerdown={(e) => e.stopPropagation()}
       >
-        <div class="bg-card border rounded-2xl max-w-md w-full overflow-hidden shadow-2xl">
-          <div class="bg-primary/5 border-b px-6 py-4 flex items-center justify-between">
-            <div class="flex items-center gap-2">
-              <Icon icon="mdi:camera" width="20" class="text-primary" />
-              <h3 class="font-bold text-foreground">Take Photo</h3>
+        <!-- Viewfinder video -->
+        <div class="absolute inset-0 w-full h-full overflow-hidden bg-black">
+          <!-- svelte-ignore a11y_media_has_caption -->
+          <video
+            bind:this={videoEl}
+            class="w-full h-full object-cover"
+            autoplay
+            playsinline
+          ></video>
+
+          {#if !mediaStream}
+            <div class="absolute inset-0 flex flex-col items-center justify-center text-white/80 gap-2 bg-black">
+              <Icon icon="mdi:loading" class="animate-spin text-primary" width="40" />
+              <span class="text-xs font-semibold tracking-wider">Starting camera viewfinder...</span>
             </div>
-            <button type="button" onclick={stopCamera} class="text-muted-foreground hover:text-foreground camera-close-btn">
-              <Icon icon="mdi:close" width="20" />
-            </button>
+          {/if}
+        </div>
+
+        <!-- Top HUD (Heads Up Display) overlay -->
+        <div class="absolute top-0 left-0 right-0 p-6 flex items-center justify-between bg-gradient-to-b from-black/60 to-transparent z-10">
+          <div class="flex items-center gap-2 text-white">
+            <Icon icon="mdi:camera" width="20" class="text-white" />
+            <span class="text-xs font-bold uppercase tracking-widest text-white">Live Viewfinder</span>
           </div>
-          <div class="p-6 flex flex-col items-center gap-4 bg-muted/20">
-            <div class="relative w-full aspect-video rounded-xl overflow-hidden bg-black border border-primary/10 shadow-inner flex items-center justify-center">
-              <!-- svelte-ignore a11y_media_has_caption -->
-              <video
-                bind:this={videoEl}
-                class="w-full h-full object-cover"
-              ></video>
-              {#if !mediaStream}
-                <div class="absolute inset-0 flex flex-col items-center justify-center text-muted-foreground gap-2">
-                  <Icon icon="mdi:loading" class="animate-spin text-primary" width="30" />
-                  <span class="text-xs">Initializing camera feed...</span>
-                </div>
-              {/if}
-            </div>
-            <div class="flex gap-2 w-full justify-between pt-2">
-              <Button type="button" variant="outline" class="flex items-center gap-1.5 border-teal-200 text-teal-600 hover:text-teal-700 hover:bg-teal-50" onclick={toggleCameraFacingMode} disabled={!mediaStream}>
-                <Icon icon="mdi:camera-switch" width="16" />
-                Switch Camera
-              </Button>
-              <div class="flex gap-2">
-                <Button type="button" variant="outline" onclick={stopCamera} class="camera-cancel-btn">Cancel</Button>
-                <Button type="button" class="bg-primary hover:bg-primary/95 text-white flex items-center gap-1.5 camera-capture-btn" onclick={capturePhoto} disabled={!mediaStream}>
-                  <Icon icon="mdi:camera-iris" width="16" />
-                  Capture
-                </Button>
-              </div>
-            </div>
+          <button 
+            type="button" 
+            onclick={stopCamera} 
+            class="w-10 h-10 rounded-full bg-black/30 backdrop-blur-md text-white flex items-center justify-center border border-white/10 hover:bg-black/50 transition-all cursor-pointer"
+            title="Close Camera"
+          >
+            <Icon icon="mdi:close" width="22" />
+          </button>
+        </div>
+
+        <!-- Target Grid overlay to guide photo alignment -->
+        <div class="absolute inset-0 flex items-center justify-center pointer-events-none z-10 opacity-30">
+          <div class="w-72 h-72 border-2 border-dashed border-white rounded-3xl relative">
+            <div class="absolute -top-1 -left-1 w-6 h-6 border-t-4 border-l-4 border-white rounded-tl-lg"></div>
+            <div class="absolute -top-1 -right-1 w-6 h-6 border-t-4 border-r-4 border-white rounded-tr-lg"></div>
+            <div class="absolute -bottom-1 -left-1 w-6 h-6 border-b-4 border-l-4 border-white rounded-bl-lg"></div>
+            <div class="absolute -bottom-1 -right-1 w-6 h-6 border-b-4 border-r-4 border-white rounded-br-lg"></div>
           </div>
+        </div>
+
+        <!-- Bottom Controls Bar overlay -->
+        <div class="absolute bottom-0 left-0 right-0 p-8 pb-12 flex items-center justify-between bg-gradient-to-t from-black/80 to-transparent z-10">
+          <!-- Switch Camera Button -->
+          <button
+            type="button"
+            onclick={toggleCameraFacingMode}
+            disabled={!mediaStream}
+            class="w-14 h-14 rounded-full bg-black/45 backdrop-blur-md text-white flex items-center justify-center border border-white/10 hover:bg-black/65 active:scale-95 disabled:opacity-40 disabled:pointer-events-none transition-all cursor-pointer"
+            title="Switch Camera"
+          >
+            <Icon icon="mdi:camera-flip-outline" width="26" />
+          </button>
+
+          <!-- Native Shutter Button -->
+          <button
+            type="button"
+            onclick={capturePhoto}
+            disabled={!mediaStream}
+            class="w-20 h-20 rounded-full border-4 border-white flex items-center justify-center bg-transparent active:scale-90 disabled:opacity-40 disabled:pointer-events-none transition-all cursor-pointer relative"
+            title="Capture Photo"
+          >
+            <span class="absolute w-16 h-16 rounded-full bg-white shadow-inner active:bg-white/85 transition-colors"></span>
+          </button>
+
+          <!-- Cancel/Back Button -->
+          <button
+            type="button"
+            onclick={stopCamera}
+            class="w-14 h-14 rounded-full bg-black/45 backdrop-blur-md text-white flex items-center justify-center border border-white/10 hover:bg-black/65 active:scale-95 transition-all cursor-pointer"
+            title="Cancel"
+          >
+            <Icon icon="mdi:arrow-left" width="26" />
+          </button>
         </div>
       </div>
     {/if}
