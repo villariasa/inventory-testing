@@ -419,14 +419,31 @@
     open = false;
   }
 
+  async function checkCameraAvailability(): Promise<boolean> {
+    try {
+      if (typeof navigator === 'undefined' || !navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) {
+        return false;
+      }
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      return devices.some(device => device.kind === 'videoinput');
+    } catch (e) {
+      return false;
+    }
+  }
+
   $effect(() => {
     if (open) {
       manualInputVal = '';
-      setTimeout(() => {
-        if (manualInputEl) {
-          manualInputEl.focus();
+      
+      checkCameraAvailability().then((hasCamera) => {
+        if (!hasCamera) {
+          setTimeout(() => {
+            if (manualInputEl) {
+              manualInputEl.focus();
+            }
+          }, 150);
         }
-      }, 150);
+      });
 
       if (activeTab === 'camera') {
         startScanner();
