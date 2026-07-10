@@ -130,7 +130,7 @@
   </Popover.Trigger>
 
   <Popover.Content
-    class="w-[var(--bits-popover-anchor-width)] max-w-sm min-w-[200px] p-0 z-50"
+    class="w-[var(--bits-popover-anchor-width)] max-w-sm min-w-[200px] p-0 z-[100] bg-card border rounded-md shadow-md"
     align="start"
     onOpenAutoFocus={(e) => e.preventDefault()}
   >
