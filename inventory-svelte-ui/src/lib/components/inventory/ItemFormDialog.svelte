@@ -409,16 +409,51 @@
   });
 
   // HTML5 Webcam Capture functions
+  let hasTorch = $state(false);
+  let torchOn = $state(false);
+
+  function detectTorchSupport() {
+    if (!mediaStream) return;
+    const track = mediaStream.getVideoTracks()[0];
+    if (track) {
+      try {
+        const capabilities = track.getCapabilities() as any;
+        hasTorch = !!capabilities.torch;
+      } catch (e) {
+        hasTorch = false;
+      }
+    }
+  }
+
+  async function toggleTorch() {
+    if (!mediaStream) return;
+    const track = mediaStream.getVideoTracks()[0];
+    if (!track) return;
+    try {
+      torchOn = !torchOn;
+      await track.applyConstraints({
+        advanced: [{ torch: torchOn }]
+      } as any);
+    } catch (err) {
+      console.warn("Failed to toggle torch:", err);
+      toast.error("Flashlight is not supported on this camera.");
+      torchOn = false;
+    }
+  }
+
   async function startCamera() {
     cameraOpen = true;
+    hasTorch = false;
+    torchOn = false;
     try {
       setTimeout(async () => {
         mediaStream = await navigator.mediaDevices.getUserMedia({
-          video: { width: 640, height: 480, facingMode: { ideal: cameraFacingMode } }
+          video: { width: { ideal: 1920 }, height: { ideal: 1080 }, facingMode: { ideal: cameraFacingMode } }
         });
         if (videoEl) {
           videoEl.srcObject = mediaStream;
           videoEl.play();
+          detectTorchSupport();
         }
       }, 100);
     } catch (err) {
@@ -430,16 +465,19 @@
 
   async function toggleCameraFacingMode() {
     cameraFacingMode = cameraFacingMode === 'user' ? 'environment' : 'user';
+    hasTorch = false;
+    torchOn = false;
     if (mediaStream) {
       mediaStream.getTracks().forEach(track => track.stop());
       mediaStream = null;
       try {
         mediaStream = await navigator.mediaDevices.getUserMedia({
-          video: { width: 640, height: 480, facingMode: { ideal: cameraFacingMode } }
+          video: { width: { ideal: 1920 }, height: { ideal: 1080 }, facingMode: { ideal: cameraFacingMode } }
         });
         if (videoEl) {
           videoEl.srcObject = mediaStream;
           videoEl.play();
+          detectTorchSupport();
         }
         toast.success(`Switched to ${cameraFacingMode === 'user' ? 'front' : 'back'} camera.`);
       } catch (err) {
@@ -456,6 +494,8 @@
       mediaStream = null;
     }
     cameraOpen = false;
+    hasTorch = false;
+    torchOn = false;
   }
 
   $effect(() => {
@@ -1024,63 +1064,98 @@
         </div>
 
         <!-- Top HUD (Heads Up Display) overlay -->
-        <div class="absolute top-0 left-0 right-0 p-6 flex items-center justify-between bg-gradient-to-b from-black/60 to-transparent z-10">
-          <div class="flex items-center gap-2 text-white">
-            <Icon icon="mdi:camera" width="20" class="text-white" />
-            <span class="text-xs font-bold uppercase tracking-widest text-white">Live Viewfinder</span>
-          </div>
+        <div class="absolute top-0 left-0 right-0 p-6 flex items-center justify-between bg-gradient-to-b from-black/75 to-transparent z-10">
           <button 
             type="button" 
             onclick={stopCamera} 
-            class="w-10 h-10 rounded-full bg-black/30 backdrop-blur-md text-white flex items-center justify-center border border-white/10 hover:bg-black/50 transition-all cursor-pointer"
+            class="w-11 h-11 rounded-full bg-black/20 text-white flex items-center justify-center hover:bg-black/40 transition-all cursor-pointer"
             title="Close Camera"
           >
-            <Icon icon="mdi:close" width="22" />
+            <Icon icon="mdi:close" width="28" />
           </button>
+          
+          <div class="flex items-center gap-4">
+            {#if hasTorch}
+              <button
+                type="button"
+                onclick={toggleTorch}
+                class="w-11 h-11 rounded-full bg-black/20 text-white flex items-center justify-center hover:bg-black/40 active:scale-95 transition-all cursor-pointer"
+                title="Toggle Flash"
+              >
+                <Icon icon={torchOn ? "mdi:flash" : "mdi:flash-off"} width="24" />
+              </button>
+            {/if}
+            <button 
+              type="button" 
+              class="w-11 h-11 rounded-full bg-black/20 text-white flex items-center justify-center opacity-60 pointer-events-none"
+            >
+              <Icon icon="mdi:aspect-ratio" width="22" />
+            </button>
+          </div>
         </div>
 
         <!-- Target Grid overlay to guide photo alignment -->
         <div class="absolute inset-0 flex items-center justify-center pointer-events-none z-10 opacity-30">
-          <div class="w-72 h-72 border-2 border-dashed border-white rounded-3xl relative">
-            <div class="absolute -top-1 -left-1 w-6 h-6 border-t-4 border-l-4 border-white rounded-tl-lg"></div>
-            <div class="absolute -top-1 -right-1 w-6 h-6 border-t-4 border-r-4 border-white rounded-tr-lg"></div>
-            <div class="absolute -bottom-1 -left-1 w-6 h-6 border-b-4 border-l-4 border-white rounded-bl-lg"></div>
-            <div class="absolute -bottom-1 -right-1 w-6 h-6 border-b-4 border-r-4 border-white rounded-br-lg"></div>
+          <div class="w-72 h-72 border border-dashed border-white/50 rounded-3xl relative">
+            <div class="absolute -top-1 -left-1 w-6 h-6 border-t-2 border-l-2 border-white rounded-tl-lg"></div>
+            <div class="absolute -top-1 -right-1 w-6 h-6 border-t-2 border-r-2 border-white rounded-tr-lg"></div>
+            <div class="absolute -bottom-1 -left-1 w-6 h-6 border-b-2 border-l-2 border-white rounded-bl-lg"></div>
+            <div class="absolute -bottom-1 -right-1 w-6 h-6 border-b-2 border-r-2 border-white rounded-br-lg"></div>
           </div>
         </div>
 
-        <!-- Bottom Controls Bar overlay -->
-        <div class="absolute bottom-0 left-0 right-0 p-8 pb-12 flex items-center justify-between bg-gradient-to-t from-black/80 to-transparent z-10">
-          <!-- Switch Camera Button -->
-          <button
-            type="button"
-            onclick={toggleCameraFacingMode}
-            disabled={!mediaStream}
-            class="w-14 h-14 rounded-full bg-black/45 backdrop-blur-md text-white flex items-center justify-center border border-white/10 hover:bg-black/65 active:scale-95 disabled:opacity-40 disabled:pointer-events-none transition-all cursor-pointer"
-            title="Switch Camera"
-          >
-            <Icon icon="mdi:camera-flip-outline" width="26" />
-          </button>
+        <!-- Bottom Mode Selector Row -->
+        <div class="absolute bottom-36 left-0 right-0 flex justify-center items-center gap-6 text-[11px] font-bold uppercase tracking-wider text-white z-10">
+          <span class="opacity-45">TEXT</span>
+          <div class="flex flex-col items-center gap-1">
+            <span class="text-white font-extrabold tracking-widest">NORMAL</span>
+            <span class="w-1 h-1 rounded-full bg-white"></span>
+          </div>
+          <span class="opacity-45">VIDEO</span>
+        </div>
 
-          <!-- Native Shutter Button -->
+        <!-- Bottom Controls Bar overlay -->
+        <div class="absolute bottom-0 left-0 right-0 p-8 pb-12 flex items-center justify-between bg-gradient-to-t from-black/80 via-black/40 to-transparent z-10">
+          <!-- Gallery Thumbnail (Left) -->
+          <div class="w-14 h-14 flex items-center justify-center">
+            {#if imageBase64}
+              <button
+                type="button"
+                onclick={() => {
+                  viewFullImageOpen = true;
+                }}
+                class="w-12 h-12 rounded-lg overflow-hidden border-2 border-white/40 bg-black/45 backdrop-blur-md flex items-center justify-center p-0.5 active:scale-95 transition-all cursor-pointer shadow-lg"
+                title="View captured photo"
+              >
+                <img src={imageBase64} alt="Captured thumbnail" class="w-full h-full object-cover rounded" />
+              </button>
+            {:else}
+              <div class="w-12 h-12 rounded-lg border-2 border-white/20 bg-white/5 backdrop-blur-md flex items-center justify-center text-white/40">
+                <Icon icon="mdi:image-outline" width="22" />
+              </div>
+            {/if}
+          </div>
+
+          <!-- Shutter Button (Center) -->
           <button
             type="button"
             onclick={capturePhoto}
             disabled={!mediaStream}
-            class="w-20 h-20 rounded-full border-4 border-white flex items-center justify-center bg-transparent active:scale-90 disabled:opacity-40 disabled:pointer-events-none transition-all cursor-pointer relative"
+            class="w-20 h-20 rounded-full border-4 border-white flex items-center justify-center bg-transparent active:scale-90 disabled:opacity-40 disabled:pointer-events-none transition-all cursor-pointer relative shadow-2xl"
             title="Capture Photo"
           >
-            <span class="absolute w-16 h-16 rounded-full bg-white shadow-inner active:bg-white/85 transition-colors"></span>
+            <span class="absolute w-15 h-15 rounded-full bg-white shadow-inner active:bg-white/85 transition-colors"></span>
           </button>
 
-          <!-- Cancel/Back Button -->
+          <!-- Switch Camera Button (Right) -->
           <button
             type="button"
-            onclick={stopCamera}
-            class="w-14 h-14 rounded-full bg-black/45 backdrop-blur-md text-white flex items-center justify-center border border-white/10 hover:bg-black/65 active:scale-95 transition-all cursor-pointer"
-            title="Cancel"
+            onclick={toggleCameraFacingMode}
+            disabled={!mediaStream}
+            class="w-12 h-12 rounded-full bg-black/40 backdrop-blur-md text-white flex items-center justify-center border border-white/15 hover:bg-black/60 active:scale-90 disabled:opacity-40 disabled:pointer-events-none transition-all cursor-pointer shadow-lg"
+            title="Switch Camera"
           >
-            <Icon icon="mdi:arrow-left" width="26" />
+            <Icon icon="mdi:camera-flip-outline" width="24" />
           </button>
         </div>
       </div>
