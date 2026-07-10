@@ -130,21 +130,21 @@
   </Popover.Trigger>
 
   <Popover.Content
-    class="w-[var(--bits-popover-anchor-width)] max-w-sm min-w-[200px] p-0 z-[100] bg-card border rounded-md shadow-md"
+    class="w-[var(--bits-popover-anchor-width)] max-w-sm p-0 z-[100] bg-card border rounded-md shadow-md"
     align="start"
     onOpenAutoFocus={(e) => e.preventDefault()}
   >
     <!-- Search input -->
-    <div class="p-2 border-b border-border">
+    <div class="px-3 py-2 border-b border-border">
       <div class="relative">
-        <Icon icon="mdi:magnify" width="15" class="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+        <Icon icon="mdi:magnify" width="15" class="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
         <input
           type="text"
           autocomplete="off"
           placeholder={searchPlaceholder}
           value={searchVal}
           oninput={handleInput}
-          class="w-full pl-8 pr-3 h-8 text-sm rounded-md border border-input bg-background focus:outline-none focus:ring-1 focus:ring-ring"
+          class="w-full pl-7 pr-3 h-8 text-sm rounded-md border border-input bg-background focus:outline-none focus:ring-1 focus:ring-ring"
         />
       </div>
     </div>
