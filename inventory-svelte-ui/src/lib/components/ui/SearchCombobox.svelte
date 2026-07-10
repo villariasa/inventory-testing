@@ -168,6 +168,7 @@
   <Popover.Content
     class="w-[var(--bits-popover-anchor-width)] max-w-sm min-w-[200px] p-0 z-50"
     align="start"
+    onOpenAutoFocus={(e) => e.preventDefault()}
   >
     <!-- Search input -->
     <div class="p-2 border-b border-border">
