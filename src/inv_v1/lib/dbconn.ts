@@ -88,7 +88,7 @@ type QueryParamSet = (string | number | Date | null)[][];
 // define a class that will contain the query command
 // and passed parameters
 interface QueryJob {
-	queryCommand: string;
+	queryCommand: string | string[];
         queryParms?: QueryParamSet;
 	};
 
@@ -119,39 +119,94 @@ export class DBProcessor {
 				this.queryResults.length = 0;
 				for (const query of this.queries) {
 
-					if (query.queryCommand.toLowerCase().startsWith('select') || query.queryCommand.toLowerCase().startsWith('call')) {
-						if (query.queryParms && query.queryParms.length === 1) {
-							dbParm = query.queryParms[0];
-							const result = await this.getRecords(query.queryCommand, dbParm);
-							this.queryResults.push(result || []);
-						} else if (query.queryParms && query.queryParms.length > 1) {
-							const result = await this.getRecords(query.queryCommand, query.queryParms.flat());
-							this.queryResults.push(result || []);
-						} else {
-							const result = await this.getRecords(query.queryCommand);
-							this.queryResults.push(result || []);
+					if (Array.isArray(query.queryCommand)) {
+						let finalResult: RowDataPacket[] | undefined;
+						let lastInsertId: number = 0;
+						let firstInsertId: number = 0;
+
+						for (let i = 0; i < query.queryCommand.length; i++) {
+							// Substitute JS-tracked ID placeholders before executing
+							let cmd = query.queryCommand[i];
+							if (lastInsertId > 0) {
+								cmd = cmd.replace(/__LAST_INSERT_ID__/g, String(lastInsertId));
+							}
+							if (firstInsertId > 0) {
+								cmd = cmd.replace(/__FIRST_INSERT_ID__/g, String(firstInsertId));
+							}
+
+							const trimmed = cmd.trim().toLowerCase();
+							if (trimmed.startsWith('select') || trimmed.startsWith('call')) {
+								const res = await this.getRecords(cmd);
+								if (i === query.queryCommand.length - 1) {
+									finalResult = res;
+								}
+							} else {
+								const [res] = await this.dbConnection.query(cmd);
+								const header = res as unknown as mysql.ResultSetHeader;
+								if ('insertId' in header && header.insertId > 0) {
+									lastInsertId = header.insertId;
+									if (firstInsertId === 0) {
+										firstInsertId = header.insertId;
+									}
+								}
+								if (i === query.queryCommand.length - 1) {
+									finalResult = [header as unknown as RowDataPacket];
+								}
+							}
 						}
-						
+						this.queryResults.push(finalResult || []);
 					} else {
-						if (query.queryParms && query.queryParms.length === 1) {
-							dbParm = query.queryParms[0];
-							[result] = await this.dbConnection.query(query.queryCommand, dbParm);
-						} else if (query.queryParms && query.queryParms.length > 1) {
-							// the .flat() function will convert the 2D array into 1D
-							// mysql query can only accept series of 1D array as parameters
-							[result] = await this.dbConnection.query(query.queryCommand, query.queryParms.flat());
+						if (query.queryCommand.toLowerCase().startsWith('select') || query.queryCommand.toLowerCase().startsWith('call')) {
+							if (query.queryCommand.includes('; SELECT @lastPostResult AS response')) {
+								const parts = query.queryCommand.split('; SELECT @lastPostResult AS response');
+								const firstCommand = parts[0].trim();
+								const secondCommand = ('SELECT @lastPostResult AS response' + (parts[1] || '')).trim();
+								
+								if (query.queryParms && query.queryParms.length === 1) {
+									dbParm = query.queryParms[0];
+									await this.getRecords(firstCommand, dbParm);
+								} else if (query.queryParms && query.queryParms.length > 1) {
+									await this.getRecords(firstCommand, query.queryParms.flat());
+								} else {
+									await this.getRecords(firstCommand);
+								}
+								
+								const selectResult = await this.getRecords(secondCommand);
+								this.queryResults.push(selectResult || []);
+							} else {
+								if (query.queryParms && query.queryParms.length === 1) {
+									dbParm = query.queryParms[0];
+									const result = await this.getRecords(query.queryCommand, dbParm);
+									this.queryResults.push(result || []);
+								} else if (query.queryParms && query.queryParms.length > 1) {
+									const result = await this.getRecords(query.queryCommand, query.queryParms.flat());
+									this.queryResults.push(result || []);
+								} else {
+									const result = await this.getRecords(query.queryCommand);
+									this.queryResults.push(result || []);
+								}
+							}
 						} else {
-							[result] = await this.dbConnection.query(query.queryCommand);
-						}
+							if (query.queryParms && query.queryParms.length === 1) {
+								dbParm = query.queryParms[0];
+								[result] = await this.dbConnection.query(query.queryCommand, dbParm);
+							} else if (query.queryParms && query.queryParms.length > 1) {
+								// the .flat() function will convert the 2D array into 1D
+								// mysql query can only accept series of 1D array as parameters
+								[result] = await this.dbConnection.query(query.queryCommand, query.queryParms.flat());
+							} else {
+								[result] = await this.dbConnection.query(query.queryCommand);
+							}
 
-						const header = result as unknown as mysql.ResultSetHeader;
+							const header = result as unknown as mysql.ResultSetHeader;
 
-						if ('insertId' in header && header.insertId > 0) {
-							this.queryResults.push(header.insertId);
-						} else {
-							this.queryResults.push(header.affectedRows);
+							if ('insertId' in header && header.insertId > 0) {
+								this.queryResults.push(header.insertId);
+							} else {
+								this.queryResults.push(header.affectedRows);
+							};
 						};
-					};
+					}
 				}
 
 				this.queries.length = 0;
@@ -168,7 +223,7 @@ export class DBProcessor {
 	}
 
 	// will add series of query commands and corresponding parameters (if any)
-	public async setQueries(sqlCommand: string, params?: QueryParamSet): Promise<boolean> {
+	public async setQueries(sqlCommand: string | string[], params?: QueryParamSet): Promise<boolean> {
 		let returnValue = true;
 
 		try {
@@ -186,10 +241,17 @@ export class DBProcessor {
 				this.queryResults.length = 0;
 			}
 
-			this.queries.push({
-				queryCommand: sqlCommand.trimStart(),
-				queryParms: params?.map(p => p.map(v => v === null ? null : v)) as QueryParamSet
-			});
+			if (Array.isArray(sqlCommand)) {
+				this.queries.push({
+					queryCommand: sqlCommand.map(cmd => cmd.trimStart()),
+					queryParms: params?.map(p => p.map(v => v === null ? null : v)) as QueryParamSet
+				});
+			} else {
+				this.queries.push({
+					queryCommand: sqlCommand.trimStart(),
+					queryParms: params?.map(p => p.map(v => v === null ? null : v)) as QueryParamSet
+				});
+			}
 		} catch (error) {
 			// MODIFIED: Replaced console.log with a call to the error logger.
 			await errorLogger.logError(error, 'DBProcessor.setQueries');
@@ -238,9 +300,13 @@ export class DBProcessor {
                   ? await this.dbConnection!.query(queryCommand, params)
                   : await this.dbConnection!.query(queryCommand);
 
-                // `rows` will be a RowDataPacket[] for SELECT statements.
-                returnValue = rows as RowDataPacket[];
-			}
+                 // `rows` will be a RowDataPacket[] for SELECT statements.
+                 if (Array.isArray(rows) && rows.length > 0 && Array.isArray(rows[rows.length - 1])) {
+                     returnValue = rows[rows.length - 1] as RowDataPacket[];
+                 } else {
+                     returnValue = rows as RowDataPacket[];
+                 }
+ 			}
 		} catch (error) {
 			// MODIFIED: Replaced console.log with a call to the error logger.
             await errorLogger.logError(error, 'DBProcessor.getRecords');
@@ -265,6 +331,9 @@ export class DBProcessor {
                 multipleStatements: true,
                 disableEval: true
 			};
+			if (!this.dbHost.includes('.hyperdrive.local')) {
+				dbConfig.ssl = {};
+			}
 			if (this.dbName) {
 				dbConfig.database = this.dbName;
 			}

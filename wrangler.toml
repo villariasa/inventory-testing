@@ -5,6 +5,11 @@ compatibility_flags = [ "nodejs_compat" ]
 
 [vars]
 BACKEND_PORT = "3000"
+DB_HOST = "inventory-db.c5202ycmec1k.ap-southeast-1.rds.amazonaws.com"
+DB_PORT = "3306"
+DB_USER = "developer"
+DB_PASSWORD = "dev10180"
+DB_NAME = "inventory"
 
 [[hyperdrive]]
 binding = "HYPERDRIVE"

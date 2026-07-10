@@ -88,6 +88,45 @@ export function getUnitBinExceptOneQuery(jsonParam: string): string {
   `;
 }
 
-export function postInventoryUnitBinQuery(jsonParam: string): string {
-  return `CALL udf_and_views_inventory.postInventoryUnitBin('${jsonParam}')`;
+export function postInventoryUnitBinQuery(jsonParam: string): string[] {
+  const params = JSON.parse(jsonParam);
+  const processType = Number(params.process_type);
+  const binId = Number(params.bin_id || 0);
+  const unitId = Number(params.unit_id || 0);
+  const description = params.description ? params.description.replace(/'/g, "''") : '';
+  const userId = Number(params.user_id || 0);
+
+  const queries: string[] = [];
+
+  if (processType === 0) {
+    // Add bin
+    queries.push(`START TRANSACTION`);
+    queries.push(`
+      INSERT INTO inventory.unit_bins (unit_id, description, created_by)
+      VALUES (${unitId}, '${description}', ${userId})
+    `);
+    queries.push(`COMMIT`);
+    queries.push(`SELECT JSON_OBJECT('success', TRUE, 'message', 'Item Bin Successfully Saved!', 'json_data', LAST_INSERT_ID()) AS response`);
+  } else if (processType === 1) {
+    // Edit bin
+    queries.push(`START TRANSACTION`);
+    queries.push(`
+      UPDATE inventory.unit_bins SET
+        unit_id = ${unitId},
+        description = '${description}',
+        modified_by = ${userId},
+        datetime_modified = NOW()
+      WHERE bin_id = ${binId}
+    `);
+    queries.push(`COMMIT`);
+    queries.push(`SELECT JSON_OBJECT('success', TRUE, 'message', 'Item Bin Successfully Updated!', 'json_data', ${binId}) AS response`);
+  } else if (processType === 2) {
+    // Delete bin
+    queries.push(`START TRANSACTION`);
+    queries.push(`DELETE FROM inventory.unit_bins WHERE bin_id = ${binId}`);
+    queries.push(`COMMIT`);
+    queries.push(`SELECT JSON_OBJECT('success', TRUE, 'message', 'Item Bin Successfully Deleted!', 'json_data', ${binId}) AS response`);
+  }
+
+  return queries;
 }

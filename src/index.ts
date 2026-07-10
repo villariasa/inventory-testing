@@ -1,3 +1,19 @@
+import tls from 'node:tls';
+
+if (tls && (tls as any).connect) {
+  const originalConnect = (tls as any).connect;
+  (tls as any).connect = function (options: any, callback: any) {
+    if (options) {
+      delete options.rejectUnauthorized;
+      delete options.checkServerIdentity;
+      delete options.secureContext;
+      delete options.minVersion;
+      delete options.maxVersion;
+    }
+    return originalConnect.call(tls, options, callback);
+  };
+}
+
 import 'dotenv/config';
 import { serve } from '@hono/node-server';
 import { OpenAPIHono } from '@hono/zod-openapi';

@@ -138,10 +138,139 @@ export function getUnitItemInfoByBinQuery(jsonParam: string): string {
   `;
 }
 
-export function postUnitItemBinSwitchQuery(jsonParam: string): string {
-  return `CALL udf_and_views_inventory.postUnitItemBinSwitch('${jsonParam}')`;
+export function postUnitItemBinSwitchQuery(jsonParam: string): string[] {
+  const params = JSON.parse(jsonParam);
+  const userId = Number(params.user_id || 0);
+  const switches: { unit_item_id: number; from_bin_id: number; to_bin_id: number }[] = Array.isArray(params.switches) ? params.switches : [];
+
+  const queries: string[] = [];
+  queries.push(`START TRANSACTION`);
+
+  for (const s of switches) {
+    queries.push(`
+      UPDATE inventory.inventory_units_items SET
+        bin_id = ${Number(s.to_bin_id)},
+        modified_by = ${userId},
+        datetime_modified = NOW()
+      WHERE unit_item_id = ${Number(s.unit_item_id)}
+    `);
+  }
+
+  queries.push(`COMMIT`);
+  queries.push(`SELECT JSON_OBJECT('success', TRUE, 'message', 'Items\' Bins Successfully Updated!', 'json_data', NULL) AS response`);
+  return queries;
 }
 
-export function postInventoryUnitItemQuery(jsonParam: string): string {
-  return `CALL inventory_udf_and_views.postInventoryUnitItem('${jsonParam}')`;
+export function postInventoryUnitItemQuery(jsonParam: string): string[] {
+  const params = JSON.parse(jsonParam);
+  const processType = Number(params.process_type);
+  const unitItemId = Number(params.unit_item_id || 0);
+  const itemId = Number(params.item_id || 0);
+  const unitId = Number(params.unit_id || 0);
+  const startingPeriod = params.starting_period ? `'${params.starting_period}'` : 'NOW()';
+  const startingQty = Number(params.starting_quantity || 0);
+  const qtyIn = Number(params.quantity_in || 0);
+  const qtyOut = Number(params.quantity_out || 0);
+  const endingQty = startingQty + qtyIn - qtyOut;
+  const unitCost = Number(params.unit_cost || 0);
+  const startingCost = unitCost * startingQty;
+  const costIn = unitCost * qtyIn;
+  const costOut = unitCost * qtyOut;
+  const endingCost = unitCost * endingQty;
+  const lastHighestInUnitCost = Number(params.last_highest_in_unit_cost || 0);
+  const binId = Number(params.bin_id || 0);
+  const userId = Number(params.user_id || 0);
+
+  const queries: string[] = [];
+
+  if (processType === 0) {
+    // Add unit item
+    queries.push(`START TRANSACTION`);
+    queries.push(`
+      INSERT INTO inventory.inventory_units_items
+        (item_id, unit_id, starting_period, last_entry, starting_quantity, quantity_in, quantity_out,
+         ending_quantity, starting_cost, cost_in, cost_out, ending_cost, unit_cost,
+         last_highest_in_unit_cost, bin_id, created_by)
+      VALUES
+        (${itemId}, ${unitId}, ${startingPeriod}, NOW(), ${startingQty}, ${qtyIn}, ${qtyOut},
+         ${endingQty}, ${startingCost}, ${costIn}, ${costOut}, ${endingCost}, ${unitCost},
+         ${lastHighestInUnitCost}, ${binId}, ${userId})
+    `);
+    queries.push(`SET @unit_item_id := LAST_INSERT_ID()`);
+    // __FIRST_INSERT_ID__ is tracked by dbconn.ts after the INSERT above
+    // Update wtd_ave_cost and last_highest_in_unit_cost on inventory_items
+    queries.push(`
+      UPDATE inventory.inventory_items i
+      JOIN (
+        SELECT
+          a.item_id,
+          IFNULL(SUM(iui.ending_cost) / NULLIF(SUM(IF(iu.warehouse, iui.ending_quantity * ii.rtu_over_stu, iui.ending_quantity)), 0), 0) AS unit_cost,
+          MAX(IF(iu.warehouse, (iui.last_highest_in_unit_cost / ii.rtu_over_stu), iui.last_highest_in_unit_cost)) AS last_highest_in_unit_cost
+        FROM inventory.inventory_units_items a
+        INNER JOIN inventory.inventory_units_items iui ON iui.item_id = a.item_id
+        INNER JOIN inventory.inventory_items ii ON iui.item_id = ii.item_id
+        INNER JOIN inventory.inventory_units iu ON iui.unit_id = iu.unit_id
+        WHERE a.unit_item_id = __FIRST_INSERT_ID__
+        GROUP BY a.item_id
+      ) u ON i.item_id = u.item_id
+      SET
+        i.wtd_ave_cost = IFNULL(u.unit_cost, 0),
+        i.last_highest_in_unit_cost = IF(i.last_highest_in_unit_cost > IFNULL(u.last_highest_in_unit_cost, 0), i.last_highest_in_unit_cost, IFNULL(u.last_highest_in_unit_cost, 0))
+      LIMIT 1
+    `);
+    queries.push(`COMMIT`);
+    queries.push(`SELECT JSON_OBJECT('success', TRUE, 'message', 'Inventory Unit Item Successfully Saved!', 'json_data', __FIRST_INSERT_ID__) AS response`);
+  } else if (processType === 1) {
+    // Edit unit item
+    queries.push(`START TRANSACTION`);
+    queries.push(`
+      UPDATE inventory.inventory_units_items SET
+        starting_period = ${startingPeriod},
+        last_entry = NOW(),
+        starting_quantity = ${startingQty},
+        quantity_in = ${qtyIn},
+        quantity_out = ${qtyOut},
+        ending_quantity = ${endingQty},
+        starting_cost = ${startingCost},
+        cost_in = ${costIn},
+        cost_out = ${costOut},
+        ending_cost = ${endingCost},
+        unit_cost = ${unitCost},
+        last_highest_in_unit_cost = IF(${unitCost} > last_highest_in_unit_cost, ${unitCost}, last_highest_in_unit_cost),
+        bin_id = ${binId},
+        modified_by = ${userId},
+        datetime_modified = NOW()
+      WHERE unit_item_id = ${unitItemId}
+    `);
+    // Update item-level cost aggregations
+    queries.push(`
+      UPDATE inventory.inventory_items i
+      JOIN (
+        SELECT
+          a.item_id,
+          IFNULL(SUM(iui.ending_cost) / NULLIF(SUM(IF(iu.warehouse, iui.ending_quantity * ii.rtu_over_stu, iui.ending_quantity)), 0), 0) AS unit_cost,
+          MAX(IF(iu.warehouse, (iui.last_highest_in_unit_cost / ii.rtu_over_stu), iui.last_highest_in_unit_cost)) AS last_highest_in_unit_cost
+        FROM inventory.inventory_units_items a
+        INNER JOIN inventory.inventory_units_items iui ON iui.item_id = a.item_id
+        INNER JOIN inventory.inventory_items ii ON iui.item_id = ii.item_id
+        INNER JOIN inventory.inventory_units iu ON iui.unit_id = iu.unit_id
+        WHERE a.unit_item_id = ${unitItemId}
+        GROUP BY a.item_id
+      ) u ON i.item_id = u.item_id
+      SET
+        i.wtd_ave_cost = IFNULL(u.unit_cost, 0),
+        i.last_highest_in_unit_cost = IF(i.last_highest_in_unit_cost > IFNULL(u.last_highest_in_unit_cost, 0), i.last_highest_in_unit_cost, IFNULL(u.last_highest_in_unit_cost, 0))
+      LIMIT 1
+    `);
+    queries.push(`COMMIT`);
+    queries.push(`SELECT JSON_OBJECT('success', TRUE, 'message', 'Inventory Unit Item Successfully Updated!', 'json_data', ${unitItemId}) AS response`);
+  } else if (processType === 2) {
+    // Delete unit item
+    queries.push(`START TRANSACTION`);
+    queries.push(`DELETE FROM inventory.inventory_units_items WHERE unit_item_id = ${unitItemId}`);
+    queries.push(`COMMIT`);
+    queries.push(`SELECT JSON_OBJECT('success', TRUE, 'message', 'Inventory Unit Item Successfully Deleted!', 'json_data', ${unitItemId}) AS response`);
+  }
+
+  return queries;
 }

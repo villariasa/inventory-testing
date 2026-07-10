@@ -272,10 +272,215 @@ export function getEmptyUnitBinQuery(jsonParam: string): string {
   `;
 }
 
-export function postInventoryItemQuery(jsonParam: string): string {
-  return `CALL udf_and_views_inventory.postInventoryItem('${jsonParam}')`;
+export function postInventoryItemQuery(jsonParam: string): string[] {
+  const params = JSON.parse(jsonParam);
+  const processType = Number(params.process_type);
+  const itemId = Number(params.item_id || 0);
+  const itemCategoryId = Number(params.item_category_id || 0);
+  const brandId = params.brand_id !== null ? Number(params.brand_id) : null;
+  const modelDescription = params.model_description ? params.model_description.replace(/'/g, "''") : '';
+  const partId = params.part_id !== null ? Number(params.part_id) : null;
+  const partNumberId = params.part_number_id !== null ? Number(params.part_number_id) : null;
+  const sizeId = params.size_id !== null ? Number(params.size_id) : null;
+  const valveId = params.valve_id !== null ? Number(params.valve_id) : null;
+  const ratioId = params.ratio_id !== null ? Number(params.ratio_id) : null;
+  const patternId = params.pattern_id !== null ? Number(params.pattern_id) : null;
+  const stockingUnit = params.stocking_unit ? params.stocking_unit.replace(/'/g, "''") : '';
+  const retailUnit = params.retail_unit ? params.retail_unit.replace(/'/g, "''") : '';
+  const rtuOverStu = Number(params.rtu_over_stu || 0);
+  const wtdAveCost = Number(params.wtd_ave_cost || 0);
+  const markupRate = Number(params.mark_up_rate || 0);
+  const sellingPrice = params.selling_price !== null ? Number(params.selling_price) : 0;
+  const userId = Number(params.user_id || 0);
+  const hasEmptyCase = Number(params.has_empty_case || 0);
+  const barcode = params.barcode ? params.barcode.replace(/'/g, "''") : null;
+  const image = params.image ? params.image.replace(/'/g, "''") : null;
+
+  const queries: string[] = [];
+
+  if (processType === 0) {
+    // Add Item
+    queries.push(`START TRANSACTION`);
+    // Main item INSERT - dbconn.ts will capture insertId after this
+    queries.push(`
+      INSERT INTO inventory.inventory_items (
+        item_category_id, brand_id, model_description, part_id, part_number_id,
+        size_id, valve_id, ratio_id, pattern_id, stocking_unit, retail_unit,
+        rtu_over_stu, wtd_ave_cost, markup_rate, selling_price, created_by
+      ) VALUES (
+        ${itemCategoryId}, ${brandId}, '${modelDescription}', ${partId}, ${partNumberId},
+        ${sizeId}, ${valveId}, ${ratioId}, ${patternId}, '${stockingUnit}', '${retailUnit}',
+        ${rtuOverStu}, ${wtdAveCost}, ${markupRate}, ${sellingPrice}, ${userId}
+      )
+    `);
+    // __LAST_INSERT_ID__ is substituted by JS executor with the item's auto-increment ID captured above
+
+    if (barcode) {
+      queries.push(`
+        INSERT INTO inventory.inventory_item_barcodes (item_id, barcode_value, barcode_type, created_by)
+        VALUES (__FIRST_INSERT_ID__, '${barcode}', 'SCANNED', ${userId})
+      `);
+    } else {
+      queries.push(`
+        INSERT INTO inventory.inventory_item_barcodes (item_id, barcode_value, barcode_type, created_by)
+        VALUES (__FIRST_INSERT_ID__, CONCAT('INV-', LPAD(__FIRST_INSERT_ID__, 6, '0')), 'INTERNAL', ${userId})
+      `);
+    }
+
+    if (image) {
+      queries.push(`
+        REPLACE INTO inventory.item_images (item_id, image)
+        VALUES (__FIRST_INSERT_ID__, '${image}')
+      `);
+    }
+
+    if (hasEmptyCase === 1) {
+      // Save main item ID before empty case INSERT changes __LAST_INSERT_ID__
+      queries.push(`SET @main_item_id := __FIRST_INSERT_ID__`);
+      queries.push(`
+        INSERT INTO inventory.inventory_items (
+          item_category_id, brand_id, model_description, part_id, part_number_id,
+          size_id, valve_id, ratio_id, pattern_id, stocking_unit, retail_unit,
+          rtu_over_stu, wtd_ave_cost, markup_rate, selling_price, created_by
+        ) VALUES (
+          ${itemCategoryId}, ${brandId}, CONCAT('${modelDescription}', ' - Case'), ${partId}, ${partNumberId},
+          ${sizeId}, ${valveId}, ${ratioId}, ${patternId}, '${stockingUnit}', '${retailUnit}',
+          ${rtuOverStu}, 0.00, ${markupRate}, 0.00, ${userId}
+        )
+      `);
+      // After empty case item INSERT, LAST_INSERT_ID() is the empty case item ID
+      queries.push(`
+        INSERT INTO inventory.inventory_item_barcodes (item_id, barcode_value, barcode_type, created_by)
+        VALUES (LAST_INSERT_ID(), CONCAT('INV-', LPAD(LAST_INSERT_ID(), 6, '0'), '-CASE'), 'INTERNAL', ${userId})
+      `);
+      queries.push(`
+        INSERT INTO inventory.inventory_empty_cases (main_item_id, empty_item_id)
+        SELECT @main_item_id, item_id FROM inventory.inventory_items
+        WHERE model_description = CONCAT('${modelDescription}', ' - Case') AND created_by = ${userId}
+        ORDER BY datetime_created DESC LIMIT 1
+      `);
+    }
+
+    queries.push(`COMMIT`);
+    queries.push(`
+      SELECT JSON_OBJECT(
+        'success', TRUE,
+        'message', 'Inventory Item Successfully Saved!',
+        'json_data', __FIRST_INSERT_ID__
+      ) AS response
+    `);
+  } else if (processType === 1) {
+    // Edit Item
+    queries.push(`START TRANSACTION`);
+    queries.push(`
+      UPDATE inventory.inventory_items SET
+        brand_id = ${brandId},
+        model_description = '${modelDescription}',
+        part_id = ${partId},
+        part_number_id = ${partNumberId},
+        size_id = ${sizeId},
+        valve_id = ${valveId},
+        ratio_id = ${ratioId},
+        pattern_id = ${patternId},
+        stocking_unit = '${stockingUnit}',
+        retail_unit = '${retailUnit}',
+        rtu_over_stu = ${rtuOverStu},
+        wtd_ave_cost = ${wtdAveCost},
+        markup_rate = ${markupRate},
+        selling_price = ${sellingPrice},
+        modified_by = ${userId},
+        datetime_modified = NOW()
+      WHERE item_id = ${itemId}
+    `);
+
+    if (barcode) {
+      queries.push(`DELETE FROM inventory.inventory_item_barcodes WHERE item_id = ${itemId}`);
+      queries.push(`
+        INSERT INTO inventory.inventory_item_barcodes (item_id, barcode_value, barcode_type, created_by)
+        VALUES (${itemId}, '${barcode}', 'SCANNED', ${userId})
+      `);
+    }
+
+    if (image) {
+      queries.push(`
+        REPLACE INTO inventory.item_images (item_id, image)
+        VALUES (${itemId}, '${image}')
+      `);
+    }
+
+    queries.push(`COMMIT`);
+    queries.push(`
+      SELECT JSON_OBJECT(
+        'success', TRUE,
+        'message', 'Inventory Item Successfully Updated!',
+        'json_data', ${itemId}
+      ) AS response
+    `);
+  } else if (processType === 2) {
+    // Delete Item
+    queries.push(`START TRANSACTION`);
+    queries.push(`DELETE FROM inventory.inventory_units_items WHERE item_id = ${itemId}`);
+    queries.push(`DELETE FROM inventory.item_images WHERE item_id = ${itemId}`);
+    queries.push(`DELETE FROM inventory.inventory_empty_cases WHERE main_item_id = ${itemId} OR empty_item_id = ${itemId}`);
+    queries.push(`DELETE FROM inventory.inventory_item_barcodes WHERE item_id = ${itemId}`);
+    queries.push(`DELETE FROM inventory.inventory_items WHERE item_id = ${itemId}`);
+    queries.push(`COMMIT`);
+    queries.push(`
+      SELECT JSON_OBJECT(
+        'success', TRUE,
+        'message', 'Inventory Item Successfully Deleted!',
+        'json_data', ${itemId}
+      ) AS response
+    `);
+  }
+
+  return queries;
 }
 
-export function postItemToUnitsQuery(jsonParam: string): string {
-  return `CALL udf_and_views_inventory.postItemToUnits('${jsonParam}')`;
+export function postItemToUnitsQuery(jsonParam: string): string[] {
+  const params = JSON.parse(jsonParam);
+  const itemId = Number(params.item_id || 0);
+  const userId = Number(params.user_id || 0);
+  const units: { unit_id: number; bin_id: number }[] = Array.isArray(params.units) ? params.units : [];
+
+  const queries: string[] = [];
+  queries.push(`START TRANSACTION`);
+
+  for (const u of units) {
+    const unitId = Number(u.unit_id);
+    const binId = Number(u.bin_id);
+    queries.push(`
+      INSERT INTO inventory.inventory_units_items
+        (item_id, unit_id, starting_period, last_entry, starting_quantity, quantity_in, quantity_out, ending_quantity, starting_cost, cost_in, cost_out, ending_cost, unit_cost, last_highest_in_unit_cost, created_by, datetime_created, bin_id)
+      SELECT
+        ${itemId}, ${unitId}, NOW(), NOW(), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ${userId}, NOW(), ${binId}
+      WHERE NOT EXISTS (
+        SELECT 1 FROM inventory.inventory_units_items WHERE item_id = ${itemId} AND unit_id = ${unitId}
+      )
+    `);
+    // Also insert for the empty case item if exists
+    queries.push(`
+      INSERT INTO inventory.inventory_units_items
+        (item_id, unit_id, starting_period, last_entry, starting_quantity, quantity_in, quantity_out, ending_quantity, starting_cost, cost_in, cost_out, ending_cost, unit_cost, last_highest_in_unit_cost, created_by, datetime_created, bin_id)
+      SELECT
+        iec.empty_item_id, ${unitId}, NOW(), NOW(), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ${userId}, NOW(), ${binId}
+      FROM inventory.inventory_empty_cases iec
+      WHERE iec.main_item_id = ${itemId}
+        AND NOT EXISTS (
+          SELECT 1 FROM inventory.inventory_units_items WHERE item_id = iec.empty_item_id AND unit_id = ${unitId}
+        )
+    `);
+  }
+
+  queries.push(`COMMIT`);
+  const unitCount = units.length;
+  queries.push(`
+    SELECT JSON_OBJECT(
+      'success', TRUE,
+      'message', CONCAT('Item Successfully Added To The Unit', IF(${unitCount} > 1, 's', ''), '!'),
+      'json_data', ${itemId}
+    ) AS response
+  `);
+
+  return queries;
 }

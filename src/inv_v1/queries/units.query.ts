@@ -55,13 +55,33 @@ export function getInventoryUnitQuery(jsonParam: string): string {
 }
 
 export function getUnitQuery(jsonParam: string): string {
-  return `CALL udf_and_views_inventory.getUnit('${jsonParam}')`;
+  // Use SELECT pattern replicating the getUnit procedure result
+  return `SELECT JSON_OBJECT('success', TRUE, 'message', 'Unit retrieved.', 'json_data', JSON_ARRAYAGG(JSON_OBJECT('unit_id', unit_id, 'description', description))) AS response FROM subscriber_common_tables.units WHERE 1=1`;
 }
 
-export function postInventoryUnitQuery(jsonParam: string): string {
-  return `CALL udf_and_views_inventory.postInventoryUnit('${jsonParam}')`;
+export function postInventoryUnitQuery(jsonParam: string): string[] {
+  const params = JSON.parse(jsonParam);
+  const unitId = Number(params.unit_id || 0);
+  const warehouse = params.bol_warehouse ? 1 : 0;
+  const bolEmployee = params.bol_employee || false;
+  const personInCharge = bolEmployee ? (params.person_in_charge ? Number(params.person_in_charge) : null) : null;
+  const personName = !bolEmployee ? (params.person_name ? params.person_name.replace(/'/g, "''") : '') : null;
+
+  const queries: string[] = [];
+  queries.push(`START TRANSACTION`);
+  queries.push(`
+    UPDATE inventory.inventory_units SET
+      warehouse = ${warehouse},
+      person_in_charge = ${personInCharge},
+      person_name = ${personName !== null ? `'${personName}'` : 'NULL'}
+    WHERE unit_id = ${unitId}
+  `);
+  queries.push(`COMMIT`);
+  queries.push(`SELECT JSON_OBJECT('success', TRUE, 'message', 'Inventory Unit Successfully Updated!', 'json_data', ${unitId}) AS response`);
+  return queries;
 }
 
-export function postUpdateInventoryUnitQuery(jsonParam: string): string {
-  return `CALL udf_and_views_inventory.postUpdateInventoryUnit('${jsonParam}')`;
+export function postUpdateInventoryUnitQuery(jsonParam: string): string[] {
+  // Same logic as postInventoryUnitQuery — both update the inventory unit
+  return postInventoryUnitQuery(jsonParam);
 }

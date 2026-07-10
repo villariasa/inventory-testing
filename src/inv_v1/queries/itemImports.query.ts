@@ -129,6 +129,58 @@ export function getImportItemsQuery(jsonParam: string): string {
   `;
 }
 
-export function postItemImportsQuery(jsonParam: string): string {
-  return `CALL udf_and_views_inventory.postItemImports('${jsonParam}')`;
+export function postItemImportsQuery(jsonParam: string): string[] {
+  const params = JSON.parse(jsonParam);
+  const processType = Number(params.process_type);
+  const importType = params.import_type || '';
+  const description = params.description ? params.description.replace(/'/g, "''") : '';
+  const id = Number(params.id || 0);
+  const userId = Number(params.user_id || 0);
+
+  // Map importType to table name, ID column name, and display name
+  const importMap: Record<string, { table: string; idCol: string; name: string }> = {
+    brand:             { table: 'brands',               idCol: 'brand_id',       name: 'Brand' },
+    ratio:             { table: 'ratios',                idCol: 'ratio_id',       name: 'Ply Rating' },
+    size:              { table: 'sizes',                 idCol: 'size_id',        name: 'Size' },
+    threadPattern:     { table: 'thread_patterns',       idCol: 'pattern_id',     name: 'Thread Pattern' },
+    valveType:         { table: 'valve_types',           idCol: 'valve_id',       name: 'Valve Type' },
+    vehiclePart:       { table: 'vehicle_parts',         idCol: 'part_id',        name: 'Vehicle Part' },
+    vehiclePartNumber: { table: 'vehicle_part_numbers',  idCol: 'part_number_id', name: 'Vehicle Part Number' },
+  };
+
+  const mapping = importMap[importType];
+  if (!mapping) {
+    return [`SELECT JSON_OBJECT('success', FALSE, 'message', 'Invalid import type!', 'json_data', NULL) AS response`];
+  }
+
+  const { table, idCol, name } = mapping;
+  const queries: string[] = [];
+
+  if (processType === 0) {
+    // Add
+    queries.push(`START TRANSACTION`);
+    queries.push(`INSERT INTO inventory.${table} (description, created_by) VALUES ('${description}', ${userId})`);
+    queries.push(`COMMIT`);
+    queries.push(`SELECT JSON_OBJECT('success', TRUE, 'message', '${name} Successfully Saved!', 'json_data', LAST_INSERT_ID()) AS response`);
+  } else if (processType === 1) {
+    // Edit
+    queries.push(`START TRANSACTION`);
+    queries.push(`
+      UPDATE inventory.${table} SET
+        description = '${description}',
+        modified_by = ${userId},
+        datetime_modified = NOW()
+      WHERE ${idCol} = ${id}
+    `);
+    queries.push(`COMMIT`);
+    queries.push(`SELECT JSON_OBJECT('success', TRUE, 'message', '${name} Successfully Updated!', 'json_data', ${id}) AS response`);
+  } else if (processType === 2) {
+    // Delete
+    queries.push(`START TRANSACTION`);
+    queries.push(`DELETE FROM inventory.${table} WHERE ${idCol} = ${id}`);
+    queries.push(`COMMIT`);
+    queries.push(`SELECT JSON_OBJECT('success', TRUE, 'message', '${name} Successfully Deleted!', 'json_data', ${id}) AS response`);
+  }
+
+  return queries;
 }
