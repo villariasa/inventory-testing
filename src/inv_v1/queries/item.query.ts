@@ -72,7 +72,6 @@ export function getInventoryItemQuery(jsonParam: string): string {
                 'modified_by', ii.modified_by,
                 'datetime_modified', ii.datetime_modified,
                 'is_empty_case', iec.empty_item_id,
-                'image', CAST(img.image AS CHAR),
                 'barcodes', bc.barcodes_json
             ) ORDER BY ii.datetime_created DESC, iic.item_description
         )

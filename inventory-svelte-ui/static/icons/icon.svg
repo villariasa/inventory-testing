@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1d5952" />
+      <stop offset="50%" stop-color="#134e4a" />
+      <stop offset="100%" stop-color="#0f3d3a" />
+    </linearGradient>
+    <linearGradient id="boxGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2dd4bf" />
+      <stop offset="100%" stop-color="#0d9488" />
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" />
+      <stop offset="100%" stop-color="#ccfbf1" />
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#000" flood-opacity="0.3" />
+    </filter>
+  </defs>
+  
+  <!-- Outer Rounded Container -->
+  <rect width="512" height="512" rx="112" fill="url(#bg)" />
+  
+  <!-- Subtle inner glowing border -->
+  <rect x="8" y="8" width="496" height="496" rx="104" fill="none" stroke="#2dd4bf" stroke-opacity="0.25" stroke-width="4" />
+  
+  <!-- Central Warehouse / Cube Icon -->
+  <g filter="url(#shadow)" transform="translate(106, 106)">
+    <!-- Roof / Upper Structure -->
+    <path d="M150 20 L270 90 L270 210 L150 280 L30 210 L30 90 Z" fill="none" stroke="url(#boxGrad)" stroke-width="18" stroke-linejoin="round" stroke-linecap="round" />
+    
+    <!-- Inner Cube / Box Details -->
+    <path d="M150 20 L150 150" stroke="url(#boxGrad)" stroke-width="14" stroke-linecap="round" />
+    <path d="M150 150 L270 90" stroke="url(#boxGrad)" stroke-width="14" stroke-linecap="round" />
+    <path d="M150 150 L30 90" stroke="url(#boxGrad)" stroke-width="14" stroke-linecap="round" />
+    
+    <!-- Central Package Highlight -->
+    <path d="M150 150 L150 280" stroke="url(#accent)" stroke-width="14" stroke-linecap="round" />
+    
+    <!-- Decorative Inventory Stack Lines -->
+    <circle cx="150" cy="150" r="14" fill="url(#accent)" />
+    <circle cx="90" cy="115" r="8" fill="#2dd4bf" />
+    <circle cx="210" cy="115" r="8" fill="#2dd4bf" />
+  </g>
+</svg>

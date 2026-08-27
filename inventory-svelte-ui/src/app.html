@@ -4,6 +4,14 @@
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<meta name="text-scale" content="scale" />
+		<link rel="manifest" href="/manifest.json" />
+		<link rel="icon" type="image/svg+xml" href="/icons/icon.svg" />
+		<link rel="icon" type="image/png" href="/icons/favicon.png" />
+		<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+		<meta name="theme-color" content="#1d5952" />
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+		<meta name="apple-mobile-web-app-title" content="Serenity Hub" />
 		%sveltekit.head%
 	</head>
 	<script>
@@ -17,6 +25,17 @@
 				}
 			} catch(e) {}
 		})();
+
+		// Register Service Worker for PWA support
+		if ('serviceWorker' in navigator) {
+			window.addEventListener('load', function() {
+				navigator.serviceWorker.register('/sw.js').then(function(reg) {
+					console.log('PWA ServiceWorker registered with scope:', reg.scope);
+				}).catch(function(err) {
+					console.warn('PWA ServiceWorker registration failed:', err);
+				});
+			});
+		}
 	</script>
 	<body data-sveltekit-preload-data="hover">
 		<div style="display: contents">%sveltekit.body%</div>
