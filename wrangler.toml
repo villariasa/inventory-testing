@@ -1,4 +1,4 @@
-name = "inventory-backend"
+name = "inventory-testing"
 main = "src/index.ts"
 compatibility_date = "2025-01-01"
 compatibility_flags = [ "nodejs_compat" ]
@@ -14,4 +14,3 @@ DB_NAME = "inventory"
 [[hyperdrive]]
 binding = "HYPERDRIVE"
 id = "c0345eaf46874dcb8cdf5e5b971ae4a5"
-
