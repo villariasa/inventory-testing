@@ -1,4 +1,4 @@
-# Enterprise Inventory Engine & Microservice
+# <img src="icons/sparkles.svg" width="28" height="28" align="center" /> Enterprise Inventory Engine & Microservice
 
 <div align="center">
 
@@ -18,19 +18,19 @@ Powered by Hono, type-safe Zod OpenAPI schemas, MariaDB/MySQL stored procedures,
 
 ---
 
-## 🌟 Architecture & Features
+## <img src="icons/cpu-chip.svg" width="22" height="22" align="center" /> Architecture & Features
 
-- **Blazing-Fast Microservice:** Engineered with **Hono v4** running on Node Server with sub-millisecond route dispatch and modular middleware.
-- **Contract-First OpenAPI Documentation:** Fully interactive Swagger UI generated automatically via `@hono/zod-openapi` and strict Zod runtime request/response validation.
-- **High-Performance Stored Procedures:** Database heavy-lifting handled directly in MariaDB / MySQL via optimized stored procedures:
+- <img src="icons/bolt.svg" width="16" height="16" align="center" /> **Blazing-Fast Microservice** — Engineered with **Hono v4** running on Node Server with sub-millisecond route dispatch and modular middleware.
+- <img src="icons/document-text.svg" width="16" height="16" align="center" /> **Contract-First OpenAPI Documentation** — Fully interactive Swagger UI generated automatically via `@hono/zod-openapi` and strict Zod runtime request/response validation.
+- <img src="icons/table-cells.svg" width="16" height="16" align="center" /> **High-Performance Stored Procedures** — Database heavy-lifting handled directly in MariaDB / MySQL via optimized stored procedures:
   - `getInventoryItem_proc.sql`: Multi-dimensional item classification, stock levels, and pricing.
   - `getItemImage_proc.sql`: Binary/URL asset resolution for inventory cataloging.
-- **Reactive Svelte Console:** Dedicated frontend interface (`inventory-svelte-ui/`) for warehouse staff and stock managers.
-- **Automated Test Coverage:** Complete integration and unit test suite built with Jest, Supertest, and TypeScript (`ts-jest`).
+- <img src="icons/window.svg" width="16" height="16" align="center" /> **Reactive Svelte Console** — Dedicated frontend interface (`inventory-svelte-ui/`) for warehouse staff and stock managers.
+- <img src="icons/check-badge.svg" width="16" height="16" align="center" /> **Automated Test Coverage** — Complete integration and unit test suite built with Jest, Supertest, and TypeScript (`ts-jest`).
 
 ---
 
-## 📁 Repository Structure
+## <img src="icons/archive-box.svg" width="22" height="22" align="center" /> Repository Structure
 
 ```
 inventory-testing/
@@ -39,6 +39,7 @@ inventory-testing/
 │   ├── schemas/                   # Zod request / response contracts
 │   └── handlers/                  # Business logic & DB execution
 ├── inventory-svelte-ui/           # Svelte frontend management client
+├── icons/                         # Tailwind Heroicons suite
 ├── *.sql                          # Stored procedure definitions and database schemas
 ├── project_specs/                 # Architectural specifications & requirements
 ├── run-inventory.sh               # Concurrent development runner script
@@ -48,7 +49,7 @@ inventory-testing/
 
 ---
 
-## 🚀 Getting Started
+## <img src="icons/rocket-launch.svg" width="22" height="22" align="center" /> Getting Started
 
 ### Prerequisites
 
@@ -71,7 +72,7 @@ mysql -u root -p your_database < getItemImage_proc.sql
 npm install
 
 # Configure environment
-cp .env.example .env  # configure DB credentials
+cp .env.example .env
 
 # Run development server with watch mode
 npm run start
@@ -80,7 +81,9 @@ npm run start
 npm run dev:all
 ```
 
-### Testing
+---
+
+## <img src="icons/check-badge.svg" width="22" height="22" align="center" /> Automated Test Coverage
 
 ```bash
 # Run unit and integration tests
@@ -92,6 +95,6 @@ npm run test:coverage
 
 ---
 
-## 📄 License
+## <img src="icons/document-text.svg" width="22" height="22" align="center" /> License
 
 Proprietary © Medy Villarias. All rights reserved.
